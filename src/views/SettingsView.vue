@@ -2,11 +2,13 @@
 import { ref } from 'vue';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import PinLock from '../components/business/PinLock.vue';
 
 const logStore = useLogStore();
 const settingsStore = useSettingsStore();
 const fileInput = ref<HTMLInputElement | null>(null);
 const newTagInput = ref('');
+const showPinSetup = ref(false);
 
 const handleAddTag = () => {
   const tag = newTagInput.value.trim();
@@ -20,6 +22,27 @@ const handleRemoveTag = (tag: string) => {
   if (confirm(`Remove tag "${tag}"?`)) {
     settingsStore.removeTag(tag);
   }
+};
+
+// PIN 相关
+const handleTogglePin = () => {
+  if (settingsStore.settings.security.pinEnabled) {
+    // 关闭 PIN
+    if (confirm('Disable PIN lock?')) {
+      settingsStore.clearPin();
+    }
+  } else {
+    // 开启 PIN，显示设置界面
+    showPinSetup.value = true;
+  }
+};
+
+const handlePinSetupSuccess = () => {
+  showPinSetup.value = false;
+};
+
+const handlePinSetupCancel = () => {
+  showPinSetup.value = false;
 };
 
 const handleExport = async () => {
@@ -62,6 +85,14 @@ const handleClear = async () => {
 </script>
 
 <template>
+  <!-- PIN Setup Overlay -->
+  <PinLock 
+    v-if="showPinSetup"
+    mode="setup"
+    @success="handlePinSetupSuccess"
+    @cancel="handlePinSetupCancel"
+  />
+
   <div class="h-full flex flex-col py-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark overflow-hidden">
     <!-- Header -->
     <header class="px-6 mb-8 flex items-center gap-4 flex-none">
@@ -73,6 +104,31 @@ const handleClear = async () => {
 
     <main class="flex-1 px-6 space-y-8 animate-fade-in overflow-y-auto no-scrollbar pb-10">
       
+      <!-- Security Section -->
+      <section>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Security</h2>
+        <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-1">
+          <button @click="handleTogglePin" class="w-full p-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors text-left">
+            <div class="flex items-center gap-4">
+              <span class="material-symbols-rounded text-primary text-xl" style="font-variation-settings: 'FILL' 1;">lock</span>
+              <div>
+                <div class="font-medium">PIN Lock</div>
+                <div class="text-xs text-neutral-500">{{ settingsStore.settings.security.pinEnabled ? 'Enabled' : 'Protect app with 4-digit PIN' }}</div>
+              </div>
+            </div>
+            <div 
+              class="w-12 h-7 rounded-full transition-all duration-200 flex items-center px-1"
+              :class="settingsStore.settings.security.pinEnabled ? 'bg-primary' : 'bg-neutral-300 dark:bg-neutral-600'"
+            >
+              <div 
+                class="w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                :class="settingsStore.settings.security.pinEnabled ? 'translate-x-5' : 'translate-x-0'"
+              ></div>
+            </div>
+          </button>
+        </div>
+      </section>
+
       <!-- Custom Tags Section -->
       <section>
         <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Custom Tags</h2>
