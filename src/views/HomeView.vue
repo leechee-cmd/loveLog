@@ -109,12 +109,24 @@ watch(showEditor, (val) => {
       </div>
     </header>
 
-    <!-- Main Action -->
-    <main class="flex-1 flex flex-col items-center justify-center w-full animate-slide-up min-h-[300px]">
-      <div class="relative">
-        <div class="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse"></div>
+    <!-- Main Action - Hero Zone -->
+    <main class="flex-1 flex flex-col items-center justify-center w-full animate-slide-up">
+      <!-- Hero Button Container -->
+      <div class="relative flex items-center justify-center">
+        
+        <!-- Outer Glow Ring (slowest) -->
+        <div class="absolute w-80 h-80 rounded-full bg-gradient-to-br from-primary/10 to-transparent animate-ping-slow opacity-30"></div>
+        
+        <!-- Middle Pulse Ring -->
+        <div class="absolute w-72 h-72 rounded-full border-2 border-primary/20 animate-pulse"></div>
+        
+        <!-- Inner Breathing Glow -->
+        <div class="absolute w-56 h-56 rounded-full bg-gradient-radial from-primary/30 via-primary/10 to-transparent animate-breathe"></div>
+        
+        <!-- Core Button -->
         <BaseBtn 
           size="hero" 
+          class="relative z-10"
           @mousedown="handlePressStart"
           @touchstart="handlePressStart"
           @mouseup="handlePressEnd"
@@ -122,22 +134,21 @@ watch(showEditor, (val) => {
           @mouseleave="handlePressEnd"
           @click="handleClick"
         >
-          <span class="material-symbols-rounded text-6xl">favorite</span>
+          <!-- Filled Heart Icon -->
+          <span class="material-symbols-rounded text-7xl" style="font-variation-settings: 'FILL' 1, 'wght' 400;">favorite</span>
         </BaseBtn>
       </div>
       
-      <p class="mt-8 text-neutral-400 font-light tracking-widest text-sm uppercase">
-        Tap to Record / Hold for Details
-      </p>
-    </main>
-
-    <!-- Heatmap Section -->
-    <section class="w-full px-6 mb-6 animate-fade-in flex-none">
-      <div class="flex justify-between items-center mb-2">
-        <h3 class="text-xs font-semibold text-neutral-400 uppercase tracking-widest">Yearly Review</h3>
+      <!-- Hint Text -->
+      <div class="mt-10 text-center">
+        <p class="text-neutral-400 font-light tracking-widest text-xs uppercase mb-1">
+          Tap to Record
+        </p>
+        <p class="text-neutral-300 dark:text-neutral-600 text-[10px] tracking-wider">
+          Hold for details
+        </p>
       </div>
-      <HeatmapGrid />
-    </section>
+    </main>
 
     <!-- Recent History -->
     <footer class="w-full px-6 flex flex-col flex-none h-[35vh] border-t border-neutral-100 dark:border-neutral-800 pt-4 pb-6">

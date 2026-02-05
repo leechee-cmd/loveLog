@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useLogStore } from '../stores/logStore';
 import TrendChart from '../components/business/TrendChart.vue';
+import HeatmapGrid from '../components/business/HeatmapGrid.vue';
 
 const logStore = useLogStore();
 const activeTab = ref<'overview' | 'achievements'>('overview');
@@ -97,6 +98,14 @@ const bestStreak = computed(() => logStore.longestStreak);
            <div class="h-[200px] w-full">
               <TrendChart type="tags" />
            </div>
+        </section>
+
+        <!-- Yearly Review Heatmap -->
+        <section class="bg-surface-variant dark:bg-surface-variant-dark p-5 rounded-3xl">
+           <div class="mb-4">
+             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Yearly Review</h3>
+           </div>
+           <HeatmapGrid />
         </section>
       </div>
 
