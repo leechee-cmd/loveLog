@@ -1,9 +1,26 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useLogStore } from '../stores/logStore';
+import { useSettingsStore } from '../stores/settingsStore';
 
 const logStore = useLogStore();
+const settingsStore = useSettingsStore();
 const fileInput = ref<HTMLInputElement | null>(null);
+const newTagInput = ref('');
+
+const handleAddTag = () => {
+  const tag = newTagInput.value.trim();
+  if (tag) {
+    settingsStore.addTag(tag);
+    newTagInput.value = '';
+  }
+};
+
+const handleRemoveTag = (tag: string) => {
+  if (confirm(`Remove tag "${tag}"?`)) {
+    settingsStore.removeTag(tag);
+  }
+};
 
 const handleExport = async () => {
   const data = await logStore.exportData();
@@ -45,16 +62,55 @@ const handleClear = async () => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col py-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark">
+  <div class="h-full flex flex-col py-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark overflow-hidden">
     <!-- Header -->
-    <header class="px-6 mb-8 flex items-center gap-4">
+    <header class="px-6 mb-8 flex items-center gap-4 flex-none">
       <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
         <span class="material-symbols-rounded text-2xl">arrow_back</span>
       </RouterLink>
-      <h1 class="text-2xl font-bold">Data Management</h1>
+      <h1 class="text-2xl font-bold">Settings</h1>
     </header>
 
-    <main class="flex-1 px-6 space-y-8 animate-fade-in">
+    <main class="flex-1 px-6 space-y-8 animate-fade-in overflow-y-auto no-scrollbar pb-10">
+      
+      <!-- Custom Tags Section -->
+      <section>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Custom Tags</h2>
+        <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-4 space-y-4">
+           <!-- Tag List -->
+           <div class="flex flex-wrap gap-2">
+              <div v-if="settingsStore.settings.customTags.length === 0" class="text-neutral-400 text-sm py-2">
+                 No custom tags added.
+              </div>
+              <template v-for="tag in settingsStore.settings.customTags" :key="tag">
+                 <div class="pl-3 pr-2 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 shadow-sm border border-transparent flex items-center gap-1.5">
+                    <span class="leading-none pb-0.5">{{ tag }}</span>
+                    <button @click="handleRemoveTag(tag)" class="rounded-full w-4 h-4 flex items-center justify-center bg-black/5 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors">
+                       <span class="material-symbols-rounded text-[10px] font-bold">close</span>
+                    </button>
+                 </div>
+              </template>
+           </div>
+           
+           <!-- Input form -->
+           <div class="flex gap-2">
+              <input 
+                v-model="newTagInput"
+                @keyup.enter="handleAddTag"
+                type="text" 
+                placeholder="Add new tag..." 
+                class="flex-1 bg-white dark:bg-neutral-800 rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-neutral-400"
+              />
+              <button 
+                @click="handleAddTag"
+                class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Add
+              </button>
+           </div>
+        </div>
+      </section>
+
       <!-- Backup Section -->
       <section>
         <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Backup & Restore</h2>

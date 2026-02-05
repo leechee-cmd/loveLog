@@ -51,7 +51,7 @@ const handleEditLog = (log: LogEntry) => {
 
 const handleEditorSave = async (data: Partial<LogEntry>) => {
   if (editingLog.value && editingLog.value.id) {
-    // Editing existing log
+    // 编辑已有日志
     const updated = {
        ...editingLog.value,
        ...data,
@@ -59,29 +59,13 @@ const handleEditorSave = async (data: Partial<LogEntry>) => {
     } as LogEntry;
     await logStore.updateEntry(updated);
   } else {
-    // Logic for "Long Press" which was creating a new log?
-    // Wait, the long press logic currently just opens the editor empty?
-    // The previous logic was: "handlePressStart" => showEditor = true.
-    // We should probably create a "Draft" or just let saving create it.
-    
-    // If no ID, create new.
-    await logStore.addQuickLog();
-    // But then we need to update it with details? 
-    // Actually, `addQuickLog` currently creates an entry immediately. 
-    // Maybe we should allow creating *with* details directly?
-    // Let's stick to the flow:
-    // If editingLog is set, update it.
-    // If not set (Long Press triggered "empty" editor?), create new.
-    
-    // But wait, the previous code had `const log = await logStore.addQuickLog()` inside handleEditorSave.
-    // That means it created it on save. That's fine.
-    const log = await logStore.addQuickLog(); // Create
+    // 长按创建新日志 (带详情)
+    const log = await logStore.addQuickLog();
     if (log) {
        const updated = {
           ...log,
           ...data,
           updatedAt: Date.now(),
-          // If user changed start time in editor, we should use that instead of log.timestamp
           timestamp: data.timestamp || log.timestamp,
           dateStr: data.timestamp ? new Date(data.timestamp).toISOString().slice(0, 10) : log.dateStr
        };
@@ -89,7 +73,6 @@ const handleEditorSave = async (data: Partial<LogEntry>) => {
     }
   }
   
-  // Reset
   editingLog.value = undefined;
 };
 
@@ -116,6 +99,9 @@ watch(showEditor, (val) => {
       <div class="flex items-center gap-1 -mr-2">
          <RouterLink to="/history" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors p-2">
            <span class="material-symbols-rounded text-2xl">calendar_month</span>
+         </RouterLink>
+         <RouterLink to="/stats" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors p-2">
+           <span class="material-symbols-rounded text-2xl">bar_chart</span>
          </RouterLink>
          <RouterLink to="/settings" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors p-2">
            <span class="material-symbols-rounded text-2xl">settings</span>
@@ -207,7 +193,6 @@ watch(showEditor, (val) => {
         v-model="showEditor"
         :initial-data="editingLog"
         @save="handleEditorSave"
-      />
       />
   </div>
 </template>
