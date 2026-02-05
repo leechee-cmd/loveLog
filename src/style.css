@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/* Custom Base Styles for Native Feel */
+@theme {
+  --color-primary: #f43f5e;
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: #fb7185;
+  
+  --color-surface-light: #fafafa;
+  --color-surface-dark: #171717;
+  --color-surface-variant: #f5f5f5;
+  --color-surface-variant-dark: #262626;
+  
+  --color-outline-light: #d4d4d4;
+  --color-outline-dark: #525252;
+  
+  --font-sans: "Outfit", sans-serif;
+  
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-fade-in: fadeIn 0.2s ease-out;
+
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+}
+
+/* Re-declaring utilities if needed, but in v4 simple utilities work out of box. 
+   We will keep the semantic mapping logic in CSS variables if possible, 
+   but for now let's map the old config to this new CSS-first world or 
+   rely on the generic config being picked up by the plugin if legacy support works.
+   
+   Actually, @tailwindcss/vite respects tailwind.config.js for backward compatibility. 
+   So I can keep using @import "tailwindcss"; and it should pull in the config?
+   
+   Let's just use @import "tailwindcss"; and keep the rest as is for now 
+   to minimize friction, assuming legacy config is loaded.
+*/
+
+html, body {
+  @apply h-full w-full overflow-hidden bg-surface-light dark:bg-surface-dark text-neutral-900 dark:text-neutral-100;
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  @apply h-full w-full relative;
+}
+
+/* Safe Area Helpers */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Scrollbar hiding for that native app feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
