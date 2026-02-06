@@ -82,6 +82,13 @@ const handleClear = async () => {
   if (!confirm('Are you certain? This will wipe all data permanently.')) return;
   await logStore.clearAllData();
 };
+
+const handleGenerateDemo = async () => {
+  if (confirm('Generate 1 year of demo data? This will add to existing data.')) {
+     await logStore.generateDemoData();
+     alert('Demo data generated!');
+  }
+};
 </script>
 
 <template>
@@ -203,6 +210,20 @@ const handleClear = async () => {
             @change="handleImportFile"
           />
         </div>
+      </section>
+
+      <!-- Developer Zone -->
+      <section>
+         <h2 class="text-sm font-medium text-primary uppercase tracking-widest mb-4">Developer</h2>
+         <div class="bg-primary/5 rounded-2xl p-1">
+            <button @click="handleGenerateDemo" class="w-full p-4 flex items-center gap-4 hover:bg-primary/10 rounded-xl transition-colors text-left text-primary">
+               <span class="material-symbols-rounded text-xl">science</span>
+               <div class="flex-1">
+                 <div class="font-medium">Generate Demo Data</div>
+                 <div class="text-xs opacity-70">Simulate 1 year of activity</div>
+               </div>
+            </button>
+         </div>
       </section>
 
       <!-- Danger Zone -->

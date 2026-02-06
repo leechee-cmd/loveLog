@@ -1,13 +1,34 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useDateFormat } from '@vueuse/core';
+import { useRoute } from 'vue-router';
 import { useLogStore } from '../stores/logStore';
 import CalendarWidget from '../components/business/CalendarWidget.vue';
 import LogEditor from '../components/business/LogEditor.vue';
 import { type LogEntry } from '../services/db';
 
 const logStore = useLogStore();
+const route = useRoute();
 const selectedDate = ref(new Date());
+
+onMounted(() => {
+  if (route.query.date) {
+    const d = new Date(route.query.date as string);
+    if (!isNaN(d.getTime())) {
+      selectedDate.value = d;
+    }
+  }
+});
+
+// Watch for route changes (e.g. if component is kept alive or navigating from another tab)
+watch(() => route.query.date, (newDate) => {
+  if (newDate) {
+    const d = new Date(newDate as string);
+    if (!isNaN(d.getTime())) {
+      selectedDate.value = d;
+    }
+  }
+});
 
 const showEditor = ref(false);
 const editingLog = ref<Partial<LogEntry> | undefined>(undefined);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { eachDayOfInterval, subYears, format, isSameDay, startOfYear, endOfYear, getDay } from 'date-fns';
+import { useRouter } from 'vue-router';
+import { eachDayOfInterval, format, startOfYear, endOfYear, getDay } from 'date-fns';
 import { useLogStore } from '../../stores/logStore';
 
 const props = defineProps<{
@@ -9,21 +10,13 @@ const props = defineProps<{
 
 const logStore = useLogStore();
 
-// Configuration
-const TODAY = new Date();
-const START_DATE = subYears(TODAY, 1); // Show last 365 days or just this year? PRD says "Year View"
-// Let's do a "Rolling Year" for now, or maybe fixed Calendar Year? 
-// GitHub uses rolling year. Let's do fixed Calendar Year (Jan 1 - Dec 31) to be cleaner for "2026".
-// Actually, usually users want to see "Today" at the end. Let's do "Last 52 Weeks" approach roughly.
-// Let's stick to: Start of current year to Today (or End of Year).
-// Let's do: Jan 1 of Current Year to Dec 31 of Current Year.
-const currentYearStart = startOfYear(TODAY);
-const currentYearEnd = endOfYear(TODAY);
+const currentYearStart = computed(() => startOfYear(new Date(logStore.statsYear, 0, 1)));
+const currentYearEnd = computed(() => endOfYear(new Date(logStore.statsYear, 0, 1)));
 
 const days = computed(() => {
   return eachDayOfInterval({
-    start: currentYearStart,
-    end: currentYearEnd
+    start: currentYearStart.value,
+    end: currentYearEnd.value
   });
 });
 
@@ -64,20 +57,60 @@ const getIntensityClass = (level: number) => {
   }
 };
 
+const router = useRouter();
+
 const handleCellClick = (date: Date) => {
-  // TODO: Open bottom sheet for this date
-  console.log('Clicked', date);
+  router.push({
+    name: 'history', // Assuming route name is 'history' or logic to path '/history'
+    query: { date: format(date, 'yyyy-MM-dd') }
+  });
 };
 
 const padDays = computed(() => {
-  const startDay = getDay(currentYearStart); // 0 = Sunday
+  const startDay = getDay(currentYearStart.value); // 0 = Sunday
   return Array(startDay).fill(null);
+});
+
+// Month Labels Logic
+const months = computed(() => {
+  const ms = [];
+  const start = currentYearStart.value;
+  // Iterate 12 months
+  for (let i = 0; i < 12; i++) {
+     const d = new Date(start.getFullYear(), i, 1);
+     // Calculate approximate week index
+     // Difference in days from start of year
+     const diffTime = Math.abs(d.getTime() - start.getTime());
+     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+     // Add padding days to get grid position
+     const startDay = getDay(start);
+     const weekIndex = Math.floor((diffDays + startDay) / 7);
+     
+     ms.push({
+        name: format(d, 'MMM'),
+        left: weekIndex // Just return the column index (week index)
+     });
+  }
+  return ms;
 });
 </script>
 
 <template>
   <div class="w-full overflow-x-auto no-scrollbar pb-4 scroll-smooth">
-    <div class="flex gap-1 min-w-max p-1">
+    <div class="min-w-max p-1 relative pt-6">
+      
+      <!-- Month Labels -->
+      <div class="flex text-[10px] text-neutral-400 font-medium absolute top-0 left-1 h-6 select-none pointer-events-none w-full">
+         <span 
+           v-for="(m, i) in months" 
+           :key="i"
+           class="absolute top-0"
+           :style="{ left: (m.left * 16) + 'px' }" 
+         >
+           {{ m.name }}
+         </span>
+      </div>
+
       <!-- Grid with 7 rows (Sunday to Saturday) -->
       <div 
         class="grid grid-rows-7 gap-1"
@@ -94,7 +127,7 @@ const padDays = computed(() => {
         <div 
           v-for="day in days" 
           :key="day.toISOString()"
-          class="w-3 h-3 rounded-sm transition-colors cursor-pointer"
+          class="w-3 h-3 rounded-sm transition-colors cursor-pointer hover:border hover:border-black/20 dark:hover:border-white/40"
           :class="getIntensityClass(getLevel(day))"
           :title="getTooltip(day)"
           @click="handleCellClick(day)"

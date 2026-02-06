@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { 
   format, 
   startOfMonth, 
@@ -22,7 +22,14 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'select']);
 
 const logStore = useLogStore();
-const currentMonth = ref(new Date());
+const currentMonth = ref(props.modelValue || new Date());
+
+// Watch for external model updates (e.g. from Heatmap jump)
+watch(() => props.modelValue, (newVal) => {
+  if (newVal && !isSameMonth(newVal, currentMonth.value)) {
+    currentMonth.value = newVal;
+  }
+});
 
 const days = computed(() => {
   const start = startOfWeek(startOfMonth(currentMonth.value));

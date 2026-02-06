@@ -121,6 +121,57 @@ export const useLogStore = defineStore('logs', () => {
     logs.value = [];
   }
 
+  async function generateDemoData() {
+    loading.value = true;
+    try {
+      const generated: LogEntry[] = [];
+      const now = new Date();
+      const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+      
+      // Iterate day by day
+      for (let d = new Date(oneYearAgo); d <= now; d.setDate(d.getDate() + 1)) {
+         // Random frequency: 0 to 4 times a day
+         // Skew towards 0 or 1.
+         const chance = Math.random();
+         let count = 0;
+         if (chance > 0.7) count = 1;
+         if (chance > 0.9) count = 2;
+         if (chance > 0.98) count = 3;
+         
+         // Specific patterns
+         // Weekend boost
+         const day = d.getDay();
+         if ((day === 0 || day === 6) && Math.random() > 0.5) count += 1;
+         
+         for (let i = 0; i < count; i++) {
+            const time = new Date(d);
+            time.setHours(8 + Math.floor(Math.random() * 14), Math.floor(Math.random() * 60));
+            
+            const tags = ['Make Love'];
+            if (time.getHours() < 10) tags.push('Morning');
+            if (Math.random() > 0.9) tags.push('Vacation');
+            
+            generated.push({
+               id: uuidv4(),
+               timestamp: time.getTime(),
+               dateStr: useDateFormat(time, 'YYYY-MM-DD').value,
+               tags: tags,
+               durationMinutes: Math.random() > 0.5 ? 15 + Math.floor(Math.random() * 45) : undefined,
+               createdAt: new Date().getTime(),
+               updatedAt: new Date().getTime()
+            });
+         }
+      }
+      
+      await dbService.bulkAddLogs(generated);
+      await loadLogs();
+    } catch (e) {
+      console.error('Demo generation failed', e);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   // Stats Computed
   const uniqueDates = computed(() => {
     const dates = new Set(logs.value.map(l => l.dateStr));
@@ -215,20 +266,36 @@ export const useLogStore = defineStore('logs', () => {
      return counts;
   });
   
+  const statsYear = ref(new Date().getFullYear());
+
+  const availableYears = computed(() => {
+    const years = new Set(logs.value.map(l => new Date(l.timestamp).getFullYear()));
+    if (logs.value.length === 0) years.add(new Date().getFullYear());
+    return Array.from(years).sort((a, b) => b - a);
+  });
+
   const monthlyStats = computed(() => {
-     // Last 6 months?
+     const year = statsYear.value;
      const counts: Record<string, number> = {};
-     const now = new Date();
-     for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+     
+     // Initialize all 12 months for the selected year
+     for (let m = 0; m < 12; m++) {
+        // Construct date: Year, Month, 1st
+        // Note: Months are 0-indexed in JS Date
+        // We want YYYY-MM format
+        // useDateFormat handles 0-indexed months correctly if passed a Date object
+        const d = new Date(year, m, 1);
         const key = useDateFormat(d, 'YYYY-MM').value;
         counts[key] = 0;
      }
      
      logs.value.forEach(l => {
-        const key = l.dateStr.substring(0, 7); // YYYY-MM
-        if (counts[key] !== undefined) {
-           counts[key]++;
+        const d = new Date(l.timestamp);
+        if (d.getFullYear() === year) {
+            const key = useDateFormat(d, 'YYYY-MM').value;
+            if (counts[key] !== undefined) {
+                counts[key]++;
+            }
         }
      });
      return counts;
@@ -281,6 +348,8 @@ export const useLogStore = defineStore('logs', () => {
     longestStreak,
     tagStats,
     monthlyStats,
+    statsYear,
+    availableYears,
     achievements, // Export achievements
     loadLogs,
     addQuickLog,
@@ -288,6 +357,7 @@ export const useLogStore = defineStore('logs', () => {
     exportData,
     importData,
     clearAllData,
+    generateDemoData,
     updateEntry
   };
 });

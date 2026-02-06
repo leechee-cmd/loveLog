@@ -48,6 +48,21 @@ const bestStreak = computed(() => logStore.longestStreak);
       </div>
     </header>
 
+    <!-- Global Year Switcher (Only visible in Stats tab) -->
+    <div v-if="activeTab === 'overview' && logStore.availableYears.length > 1" class="px-6 mb-2 animate-fade-in flex-none">
+       <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <button 
+             v-for="year in logStore.availableYears" 
+             :key="year"
+             @click="logStore.statsYear = year"
+             class="px-3 py-1.5 text-xs font-bold rounded-full transition-all border shrink-0"
+             :class="logStore.statsYear === year ? 'bg-primary text-white border-primary shadow-sm shadow-primary/20' : 'bg-surface-variant dark:bg-surface-variant-dark text-neutral-500 border-transparent hover:bg-neutral-200 dark:hover:bg-neutral-700'"
+           >
+             {{ year }}
+           </button>
+       </div>
+    </div>
+
     <main class="flex-1 px-6 overflow-y-auto no-scrollbar animate-slide-up space-y-6 pb-10">
       
       <!-- Overview Tab -->
