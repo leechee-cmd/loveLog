@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import { useLogStore } from '../stores/logStore';
 import BaseBtn from '../components/base/BaseBtn.vue';
 import LogEditor from '../components/business/LogEditor.vue';
@@ -8,6 +8,27 @@ import { type LogEntry } from '../services/db';
 const logStore = useLogStore();
 const showEditor = ref(false);
 const editingLog = ref<Partial<LogEntry> | undefined>(undefined);
+
+// 创意问候语 - 基于时间和数据
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  const streak = logStore.currentStreak;
+  const total = logStore.totalCount;
+  
+  // 根据连胜和总数给出特别提示
+  if (streak >= 7) return 'On Fire';
+  if (streak >= 3) return 'Keep It Up';
+  if (total === 0) return 'Start Your Story';
+  
+  // 基于时间的浪漫提示
+  if (hour < 6) return 'Late Night Vibes';
+  if (hour < 9) return 'Rise and Shine';
+  if (hour < 12) return 'Morning Glow';
+  if (hour < 14) return 'Midday Love';
+  if (hour < 18) return 'Afternoon Bliss';
+  if (hour < 21) return 'Golden Hour';
+  return 'Night Falls';
+});
 
 onMounted(() => {
   logStore.loadLogs();
@@ -119,7 +140,7 @@ watch(showEditor, (val) => {
     <!-- Greeting / Header -->
     <header class="w-full px-6 flex justify-between items-start animate-fade-in flex-none">
       <div>
-        <h1 class="text-3xl font-light text-neutral-400">Good Evening</h1>
+        <h1 class="text-2xl font-light text-neutral-400 whitespace-nowrap">{{ greeting }}</h1>
         <div class="flex items-baseline gap-2 mt-2">
           <span class="text-5xl font-bold text-primary">{{ logStore.totalCount }}</span>
           <span class="text-sm font-medium text-neutral-500">Total Love</span>
