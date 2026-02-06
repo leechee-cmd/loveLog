@@ -2,7 +2,6 @@
 import { onMounted, ref, watch } from 'vue';
 import { useLogStore } from '../stores/logStore';
 import BaseBtn from '../components/base/BaseBtn.vue';
-import HeatmapGrid from '../components/business/HeatmapGrid.vue';
 import LogEditor from '../components/business/LogEditor.vue';
 import { type LogEntry } from '../services/db';
 
@@ -35,9 +34,39 @@ const handlePressEnd = () => {
   }
 };
 
+// Particle System
+interface Particle {
+  id: number;
+  tx: number;
+  ty: number;
+}
+const particles = ref<Particle[]>([]);
+let particleId = 0;
+
+const spawnParticles = () => {
+  const count = 12;
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count;
+    const velocity = 80 + Math.random() * 40; // distance
+    const tx = Math.cos(angle) * velocity;
+    const ty = Math.sin(angle) * velocity;
+    
+    const id = particleId++;
+    particles.value.push({ id, tx, ty });
+    
+    // Cleanup
+    setTimeout(() => {
+      particles.value = particles.value.filter(p => p.id !== id);
+    }, 800);
+  }
+};
+
 const handleClick = async () => {
   // If it was a long press, do nothing (editor is already opening)
   if (isLongPress) return;
+
+  // Visual Feedback
+  spawnParticles();
 
   // Simple Click
   if (navigator.vibrate) navigator.vibrate(50);
@@ -123,6 +152,20 @@ watch(showEditor, (val) => {
         <!-- Inner Breathing Glow -->
         <div class="absolute w-56 h-56 rounded-full bg-gradient-radial from-primary/30 via-primary/10 to-transparent animate-breathe"></div>
         
+        <!-- Particles Container -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+          <div 
+            v-for="p in particles" 
+            :key="p.id"
+            class="absolute w-3 h-3 rounded-full bg-primary"
+            :style="{
+              '--tx': p.tx + 'px',
+              '--ty': p.ty + 'px',
+              animation: 'particle-out 0.8s ease-out forwards'
+            }"
+          ></div>
+        </div>
+
         <!-- Core Button -->
         <BaseBtn 
           size="hero" 
@@ -207,3 +250,16 @@ watch(showEditor, (val) => {
       />
   </div>
 </template>
+
+<style scoped>
+@keyframes particle-out {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0);
+    opacity: 0;
+  }
+}
+</style>

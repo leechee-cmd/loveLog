@@ -85,15 +85,16 @@ const handleClear = async () => {
 </script>
 
 <template>
-  <!-- PIN Setup Overlay -->
-  <PinLock 
-    v-if="showPinSetup"
-    mode="setup"
-    @success="handlePinSetupSuccess"
-    @cancel="handlePinSetupCancel"
-  />
+  <div class="h-full bg-surface-light dark:bg-surface-dark">
+    <!-- PIN Setup Overlay -->
+    <PinLock 
+      v-if="showPinSetup"
+      mode="setup"
+      @success="handlePinSetupSuccess"
+      @cancel="handlePinSetupCancel"
+    />
 
-  <div class="h-full flex flex-col py-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark overflow-hidden">
+    <div class="h-full flex flex-col py-6 safe-top safe-bottom overflow-hidden">
     <!-- Header -->
     <header class="px-6 mb-8 flex items-center gap-4 flex-none">
       <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
@@ -217,5 +218,6 @@ const handleClear = async () => {
          </div>
       </section>
     </main>
+    </div>
   </div>
 </template>
