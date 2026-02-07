@@ -3,12 +3,19 @@ import { RouterView, useRouter } from 'vue-router';
 import { onMounted, ref, watch } from 'vue';
 import { useSettingsStore } from './stores/settingsStore';
 import PinLock from './components/business/PinLock.vue';
+import ToastContainer, { type Toast } from './components/base/ToastContainer.vue';
 
 const settingsStore = useSettingsStore();
 const router = useRouter();
 
 // 动态过渡名称
 const transitionName = ref('fade-up');
+const toastRef = ref<InstanceType<typeof ToastContainer> | null>(null);
+
+// Global Event Listener for Toasts
+const handleToastEvent = (e: CustomEvent<Omit<Toast, 'id'>>) => {
+  toastRef.value?.addToast(e.detail);
+};
 
 // 监听路由变化，只对 Settings 使用滑动过渡
 watch(() => router.currentRoute.value, (to, from) => {
@@ -30,11 +37,15 @@ watch(() => router.currentRoute.value, (to, from) => {
 onMounted(() => {
   // 检查锁定状态
   settingsStore.checkLockStatus();
+  window.addEventListener('show-toast', handleToastEvent as EventListener);
 });
 </script>
 
 <template>
   <div class="bg-surface-light dark:bg-surface-dark h-screen overflow-hidden flex flex-col text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
+    <!-- Toast Notification Container -->
+    <ToastContainer ref="toastRef" />
+
     <!-- PIN 锁屏 -->
     <PinLock 
       v-if="settingsStore.settings.security.pinEnabled && !settingsStore.isUnlocked"

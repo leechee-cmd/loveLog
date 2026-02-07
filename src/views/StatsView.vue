@@ -130,23 +130,59 @@ const bestStreak = computed(() => logStore.longestStreak);
            <div 
              v-for="badge in logStore.achievements" 
              :key="badge.id"
-             class="bg-surface-variant dark:bg-surface-variant-dark p-4 rounded-2xl flex flex-col items-center text-center transition-all animate-fade-in relative overflow-hidden"
-             :class="badge.unlocked ? 'border-2 border-primary/20' : 'opacity-60 grayscale'"
+             class="relative rounded-2xl p-[2px] overflow-hidden transition-all animate-fade-in group"
+             :class="[
+                badge.unlocked ? '' : 'opacity-80',
+                badge.secret && !badge.unlocked ? 'opacity-50' : ''
+             ]"
            >
-              <!-- Progress Bar Background if locked -->
-              <div v-if="!badge.unlocked" class="absolute bottom-0 left-0 h-1 bg-primary transition-all duration-500" :style="{ width: (badge.progress / badge.target * 100) + '%' }"></div>
-              
+              <!-- Border Gradient Layer -->
               <div 
-                class="w-12 h-12 rounded-full flex items-center justify-center mb-3"
-                :class="badge.unlocked ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400'"
-              >
-                  <span class="material-symbols-rounded text-2xl">{{ badge.icon }}</span>
-              </div>
-              <h3 class="font-bold text-sm mb-1">{{ badge.name }}</h3>
-              <p class="text-xs text-neutral-500 leading-tight mb-2">{{ badge.desc }}</p>
-              
-              <div class="text-[10px] font-bold uppercase tracking-wider" :class="badge.unlocked ? 'text-primary' : 'text-neutral-400'">
-                 {{ badge.unlocked ? 'Unlocked' : `${badge.progress} / ${badge.target}` }}
+                v-if="!(badge.secret && !badge.unlocked)"
+                class="absolute inset-0 transition-transform duration-1000 ease-out"
+                :style="{ 
+                   background: badge.secret && badge.unlocked 
+                      ? `conic-gradient(#fbbf24 100%, transparent 0)` 
+                      : `conic-gradient(var(--color-primary) ${badge.unlocked ? 100 : (badge.progress / badge.target * 100)}%, transparent 0)` 
+                }"
+                :class="badge.unlocked ? 'opacity-20' : 'opacity-100'"
+              ></div>
+
+              <!-- Inner Content -->
+              <div class="relative bg-surface-variant dark:bg-surface-variant-dark rounded-xl p-4 flex flex-col items-center text-center h-full z-10">
+                 
+                  <!-- Icon Container -->
+                 <div 
+                   class="w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors"
+                   :class="[
+                      badge.unlocked && badge.secret ? 'bg-amber-400 text-white shadow-lg shadow-amber-400/30' : '',
+                      badge.unlocked && !badge.secret ? 'bg-primary text-white shadow-lg shadow-primary/30' : '',
+                      !badge.unlocked ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 grayscale' : ''
+                   ]"
+                 >
+                     <span class="material-symbols-rounded text-2xl">
+                        {{ (badge.secret && !badge.unlocked) ? 'lock' : badge.icon }}
+                     </span>
+                 </div>
+                 
+                 <h3 class="font-bold text-sm mb-1 line-clamp-1">
+                    {{ (badge.secret && !badge.unlocked) ? '???' : badge.name }}
+                 </h3>
+                 <p class="text-xs text-neutral-500 leading-tight mb-2 line-clamp-2 h-8">
+                    {{ (badge.secret && !badge.unlocked) ? 'Keep exploring to reveal.' : badge.desc }}
+                 </p>
+                 
+                 <div class="mt-auto text-[10px] font-bold uppercase tracking-wider" 
+                    :class="[
+                      badge.unlocked && badge.secret ? 'text-amber-500' : '',
+                      badge.unlocked && !badge.secret ? 'text-primary' : '',
+                      !badge.unlocked ? 'text-neutral-400' : ''
+                    ]"
+                 >
+                    <span v-if="badge.secret && !badge.unlocked">SECRET</span>
+                    <span v-else-if="badge.unlocked">Unlocked</span>
+                    <span v-else>{{ badge.progress }} / {{ badge.target }}</span>
+                 </div>
               </div>
            </div>
         </div>

@@ -31,11 +31,10 @@ export const useLogStore = defineStore('logs', () => {
   }
 
   async function addQuickLog(date?: Date) {
+    // 1. Snapshot currently unlocked badges
+    const prevUnlocked = new Set(achievements.value.filter(b => b.unlocked).map(b => b.id));
+
     const targetDate = date || new Date();
-    // Reset time to current time if quick log, or noon if backfill? 
-    // If backfill, we usually want "now" time but on that date, or just default to 12:00?
-    // Let's preserve current time if 'date' is today, otherwise default to 12:00 PM for backfills to avoid timezone weirdness? 
-    // Or just simple: Timestamp of that date object.
     
     // If date is provided, ensures it has a timestamp.
     
@@ -49,13 +48,34 @@ export const useLogStore = defineStore('logs', () => {
     };
 
     // Optimistic Update: Insert in correct order
-    // Since we sort by timestamp desc, unshift might not be right if backfilling.
-    // Insert and sort.
     logs.value.push(newLog);
     logs.value.sort((a, b) => b.timestamp - a.timestamp);
 
     try {
       await dbService.addLog(newLog);
+      
+      // 2. Diff unlocked badges
+      // We must wait for reactivity? Computed updates should be relatively sync effectively or nextTick.
+      // But since we modified logs.value, the computed achievements should re-evaluate.
+      // Let's assume sync reactivity for simpler ref updates or check in nextTick if needed.
+      // Actually standard pinia computed is sync if based on store state Refs.
+      
+      const newUnlocked = achievements.value.filter(b => b.unlocked);
+      newUnlocked.forEach(b => {
+         if (!prevUnlocked.has(b.id)) {
+             // 🎯 Achievement Unlocked!
+             const event = new CustomEvent('show-toast', {
+                detail: {
+                    title: 'Achievement Unlocked!',
+                    message: b.name,
+                    icon: b.icon,
+                    type: 'achievement'
+                }
+             });
+             window.dispatchEvent(event);
+         }
+      });
+
       return newLog; // Success
     } catch (e) {
       // Rollback on failure
@@ -124,6 +144,8 @@ export const useLogStore = defineStore('logs', () => {
   async function generateDemoData() {
     loading.value = true;
     try {
+      const prevUnlocked = new Set(achievements.value.filter(b => b.unlocked).map(b => b.id));
+
       const generated: LogEntry[] = [];
       const now = new Date();
       const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
@@ -165,6 +187,26 @@ export const useLogStore = defineStore('logs', () => {
       
       await dbService.bulkAddLogs(generated);
       await loadLogs();
+
+      // Check for mass unlocks
+      const newUnlocked = achievements.value.filter(b => b.unlocked);
+      let unlockCount = 0;
+      newUnlocked.forEach(b => {
+         if (!prevUnlocked.has(b.id)) unlockCount++;
+      });
+      
+      if (unlockCount > 0) {
+          const event = new CustomEvent('show-toast', {
+            detail: {
+                title: 'Demo Data Generated',
+                message: `Unlocked ${unlockCount} achievements!`,
+                icon: 'auto_awesome',
+                type: 'achievement'
+            }
+         });
+         window.dispatchEvent(event);
+      }
+
     } catch (e) {
       console.error('Demo generation failed', e);
     } finally {
@@ -304,31 +346,115 @@ export const useLogStore = defineStore('logs', () => {
   const achievements = computed(() => {
     // Define Badges Config
     const badges = [
-       { id: 'first_love', name: 'First Love', desc: 'Recorded your first moment.', icon: 'favorite', target: 1, type: 'count' },
+       // 🏆 Milestones (Total Count)
+       { id: 'first_step', name: 'First Step', desc: 'Recorded your first moment.', icon: 'footprint', target: 1, type: 'count' },
+       { id: 'getting_started', name: 'Getting Started', desc: 'Recorded 10 times.', icon: 'filter_1', target: 10, type: 'count' },
+       { id: 'enthusiast', name: 'Enthusiast', desc: 'Recorded 50 times.', icon: 'favorite', target: 50, type: 'count' },
        { id: 'centurion', name: 'Centurion', desc: 'Recorded 100 times.', icon: 'military_tech', target: 100, type: 'count' },
+       { id: 'legend', name: 'Legend', desc: 'Recorded 500 times.', icon: 'diamond', target: 500, type: 'count' },
+
+       // 🔥 Streaks (Consistency)
        { id: 'warming_up', name: 'Warming Up', desc: '3-day streak.', icon: 'local_fire_department', target: 3, type: 'streak' },
        { id: 'on_fire', name: 'On Fire', desc: '7-day streak.', icon: 'whatshot', target: 7, type: 'streak' },
-       { id: 'passionate', name: 'Passionate', desc: 'Recorded 3 times in one day.', icon: 'bolt', target: 3, type: 'daily_max' },
-       { id: 'morning_glory', name: 'Morning Glory', desc: '5 Morning sessions.', icon: 'wb_sunny', target: 5, type: 'tag', tag: 'Morning' },
+       { id: 'unstoppable', name: 'Unstoppable', desc: '14-day streak.', icon: 'bolt', target: 14, type: 'streak' },
+       { id: 'month_master', name: 'Month Master', desc: '30-day streak.', icon: 'calendar_month', target: 30, type: 'streak' },
+
+       // ⚡ Intensity (Daily Max)
+       { id: 'double_trouble', name: 'Double Trouble', desc: '2 times in one day.', icon: 'looks_two', target: 2, type: 'daily_max' },
+       { id: 'hat_trick', name: 'Hat Trick', desc: '3 times in one day.', icon: 'looks_3', target: 3, type: 'daily_max' },
+       { id: 'insatiable', name: 'Insatiable', desc: '5 times in one day.', icon: 'all_inclusive', target: 5, type: 'daily_max' },
+
+       // 🕰️ Timing & Context
+       { id: 'early_bird', name: 'Early Bird', desc: '5 Morning sessions (5AM-9AM).', icon: 'wb_twilight', target: 5, type: 'time', start: 5, end: 9 },
+       { id: 'night_owl', name: 'Night Owl', desc: '10 Late night sessions (10PM-4AM).', icon: 'bedtime', target: 10, type: 'time_night' }, // Special logic for cross-midnight
+       { id: 'weekend_warrior', name: 'Weekend Warrior', desc: '10 sessions on Weekends.', icon: 'weekend', target: 10, type: 'weekend' },
+       
+       // ⏳ Duration
+       { id: 'quickie', name: 'Quickie', desc: '10 Quick sessions (<15m).', icon: 'timer', target: 10, type: 'duration_under', minutes: 15 },
+       { id: 'marathon', name: 'Marathon', desc: '5 Long sessions (>45m).', icon: 'timelapse', target: 5, type: 'duration_over', minutes: 45 },
+
+       // 🌍 Tags
        { id: 'adventurer', name: 'Adventurer', desc: 'Logged on Vacation.', icon: 'flight', target: 1, type: 'tag', tag: 'Vacation' },
-       { id: 'make_love_master', name: 'True Lover', desc: '50 "Make Love" tags.', icon: 'favorite_border', target: 50, type: 'tag', tag: 'Make Love' },
+
+       // 🕵️ Hidden / Special (Secret)
+       { id: 'cupid', name: "Cupid's Arrow", desc: 'Logged on Valentine\'s Day (Feb 14).', icon: 'favorite', target: 1, type: 'date_match', month: 1, day: 14, secret: true },
+       { id: 'new_year', name: 'New Year Spark', desc: 'Logged on Jan 1st.', icon: 'celebration', target: 1, type: 'date_match', month: 0, day: 1, secret: true },
+       { id: 'the_answer', name: 'The Answer', desc: 'Recorded exactly 42 times.', icon: 'psychology', target: 42, type: 'exact_count', secret: true },
     ];
     
-    const stats = tagStats.value;
+    // Pre-calculate Statistics
     const total = totalCount.value;
-    const streak = longestStreak.value;
+    const streak = longestStreak.value; // Use all-time best streak
     
-    // Calculate max daily
+    // Daily Max
     const dailyCounts: Record<string, number> = {};
     logs.value.forEach(l => dailyCounts[l.dateStr] = (dailyCounts[l.dateStr] || 0) + 1);
     const maxDaily = Math.max(0, ...Object.values(dailyCounts));
 
+    // Complex Stats Counters
+    let weekendCount = 0;
+    let nightOwlCount = 0; // 22:00 - 04:00
+    let earlyBirdCount = 0; // 05:00 - 09:00
+    let marathonCount = 0; // > 45m
+    let quickieCount = 0; // < 15m
+    const tagCounts = tagStats.value;
+    
+    // Date Match Checks
+    const dateMatches: Record<string, boolean> = {}; // key: "M-D" e.g. "1-14" (Feb 14, month is 0-indexed in JS Date? Wait, useDateFormat or Date methods.)
+    // JS Date: Month is 0-11, Date is 1-31.
+    // Let's store set of "M-D" strings present in logs.
+    const presentDates = new Set<string>();
+
+    logs.value.forEach(l => {
+       const d = new Date(l.timestamp);
+       const h = d.getHours();
+       const day = d.getDay(); // 0=Sun, 6=Sat
+       const m = d.getMonth(); // 0-11
+       const date = d.getDate(); // 1-31
+       
+       presentDates.add(`${m}-${date}`);
+
+       // Weekend
+       if (day === 0 || day === 6) weekendCount++;
+
+       // Night Owl (22, 23, 0, 1, 2, 3)
+       if (h >= 22 || h < 4) nightOwlCount++;
+
+       // Early Bird (5, 6, 7, 8)
+       if (h >= 5 && h < 9) earlyBirdCount++;
+
+       // Duration
+       if (l.durationMinutes) {
+          if (l.durationMinutes > 45) marathonCount++;
+          if (l.durationMinutes < 15) quickieCount++;
+       }
+    });
+
     return badges.map(b => {
        let progress = 0;
        if (b.type === 'count') progress = total;
-       if (b.type === 'streak') progress = streak; // Use longest streak for achievements
+       if (b.type === 'exact_count') progress = total; // Trigger only on exact match? Or >=? Commonly Achievements are >= but "The Answer" implies exact. Let's do >= for simplicity or strictly exact? Let's do >= 42 to keep it unlocked.
+       
+       if (b.type === 'streak') progress = streak;
        if (b.type === 'daily_max') progress = maxDaily;
-       if (b.type === 'tag' && b.tag) progress = stats[b.tag] || 0;
+       if (b.type === 'tag' && b.tag) progress = tagCounts[b.tag] || 0;
+       
+       // New Logic
+       if (b.type === 'weekend') progress = weekendCount;
+       if (b.type === 'time' && b.start !== undefined && b.end !== undefined) {
+           if (b.id === 'early_bird') progress = earlyBirdCount; 
+       }
+       if (b.type === 'time_night') progress = nightOwlCount;
+       if (b.type === 'duration_over') progress = marathonCount;
+       if (b.type === 'duration_under') progress = quickieCount;
+       
+       if (b.type === 'date_match' && b.month !== undefined && b.day !== undefined) {
+          if (presentDates.has(`${b.month}-${b.day}`)) {
+              progress = 1;
+          } else {
+              progress = 0;
+          }
+       }
        
        return {
           ...b,
