@@ -39,8 +39,8 @@ const trendData = computed(() => {
   const labels = Object.keys(stats).map(k => {
      const parts = k.split('-');
      if (parts.length < 2) return k;
-     const y = parseInt(parts[0]);
-     const m = parseInt(parts[1]);
+     const y = parseInt(parts[0]!);
+     const m = parseInt(parts[1]!);
      const date = new Date(y, m-1);
      return date.toLocaleDateString('en-US', { month: 'short' });
   });

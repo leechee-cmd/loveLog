@@ -118,8 +118,8 @@ const months = computed(() => {
       >
         <!-- Padding for start of year alignment -->
         <div 
-          v-for="(n, index) in padDays" 
-          :key="'pad-' + index"
+          v-for="i in padDays.length" 
+          :key="'pad-' + i"
           class="w-3 h-3"
         ></div>
 

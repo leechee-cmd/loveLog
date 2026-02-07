@@ -30,6 +30,35 @@ export const useLogStore = defineStore('logs', () => {
     }
   }
 
+  // Define Badge Types
+  type BadgeType = 'count' | 'streak' | 'daily_max' | 'time' | 'time_night' | 'weekend' | 'duration_under' | 'duration_over' | 'tag' | 'date_match' | 'exact_count';
+
+  interface BaseBadge {
+    id: string;
+    name: string;
+    desc: string;
+    icon: string;
+    target: number;
+    type: BadgeType;
+    secret?: boolean;
+    // Optional props for different types (or use discriminated union)
+    start?: number;
+    end?: number;
+    minutes?: number;
+    tag?: string;
+    month?: number;
+    day?: number;
+  }
+
+  // To make it strict, we could use a Discriminated Union, but for simplicity in this file, we can make props optional in interface
+  // or use `as` casting when safely accessing.
+  // A cleaner approach for TS is fully specified union:
+  
+
+  
+  // Actually simpler: Just use BaseBadge with all optional props is often easiest if we check type. 
+  // But let's stick to the generated code style but fix the access.
+
   async function addQuickLog(date?: Date) {
     // 1. Snapshot currently unlocked badges
     const prevUnlocked = new Set(achievements.value.filter(b => b.unlocked).map(b => b.id));
@@ -57,8 +86,6 @@ export const useLogStore = defineStore('logs', () => {
       // 2. Diff unlocked badges
       // We must wait for reactivity? Computed updates should be relatively sync effectively or nextTick.
       // But since we modified logs.value, the computed achievements should re-evaluate.
-      // Let's assume sync reactivity for simpler ref updates or check in nextTick if needed.
-      // Actually standard pinia computed is sync if based on store state Refs.
       
       const newUnlocked = achievements.value.filter(b => b.unlocked);
       newUnlocked.forEach(b => {
@@ -223,17 +250,9 @@ export const useLogStore = defineStore('logs', () => {
   const currentStreak = computed(() => {
     if (uniqueDates.value.length === 0) return 0;
     
-    const today = useDateFormat(useNow(), 'YYYY-MM-DD').value;
+
     const sorted = uniqueDates.value;
     let streak = 0;
-    
-    // Check if today or yesterday exists to start the streak
-    // If last log was 2 days ago, streak is broken, but we display 0.
-    // However, if today is logged, count 1.
-    // If yesterday logged, count +1.
-    
-    // Logic: Look for continuous sequence from today/yesterday.
-    // We iterate backwards from today.
     
     let currentCheck = new Date(); // Start today
     // Check today
@@ -248,7 +267,6 @@ export const useLogStore = defineStore('logs', () => {
     }
     
     // Now count backwards
-    // We already established the start of the chain (today or yesterday)
     streak = 0;
     // Simple loop
     while (true) {
@@ -270,8 +288,6 @@ export const useLogStore = defineStore('logs', () => {
     let current = 0;
     let prevDate: Date | null = null;
     
-    // Iterate from oldest to newest to count simpler? Or newest to oldest?
-    // Let's go newest to oldest (sorted desc).
     const sorted = uniqueDates.value;
     
     for (const dateStr of sorted) {
@@ -300,9 +316,6 @@ export const useLogStore = defineStore('logs', () => {
             l.tags.forEach(t => {
                 counts[t] = (counts[t] || 0) + 1;
             });
-        } else {
-            // No tag? Count as 'Uncategorized' or ignore?
-            // counts['Other'] = (counts['Other'] || 0) + 1;
         }
      });
      return counts;
@@ -322,10 +335,6 @@ export const useLogStore = defineStore('logs', () => {
      
      // Initialize all 12 months for the selected year
      for (let m = 0; m < 12; m++) {
-        // Construct date: Year, Month, 1st
-        // Note: Months are 0-indexed in JS Date
-        // We want YYYY-MM format
-        // useDateFormat handles 0-indexed months correctly if passed a Date object
         const d = new Date(year, m, 1);
         const key = useDateFormat(d, 'YYYY-MM').value;
         counts[key] = 0;
@@ -345,7 +354,7 @@ export const useLogStore = defineStore('logs', () => {
 
   const achievements = computed(() => {
     // Define Badges Config
-    const badges = [
+    const badges: BaseBadge[] = [
        // 🏆 Milestones (Total Count)
        { id: 'first_step', name: 'First Step', desc: 'Recorded your first moment.', icon: 'footprint', target: 1, type: 'count' },
        { id: 'getting_started', name: 'Getting Started', desc: 'Recorded 10 times.', icon: 'filter_1', target: 10, type: 'count' },
@@ -366,7 +375,7 @@ export const useLogStore = defineStore('logs', () => {
 
        // 🕰️ Timing & Context
        { id: 'early_bird', name: 'Early Bird', desc: '5 Morning sessions (5AM-9AM).', icon: 'wb_twilight', target: 5, type: 'time', start: 5, end: 9 },
-       { id: 'night_owl', name: 'Night Owl', desc: '10 Late night sessions (10PM-4AM).', icon: 'bedtime', target: 10, type: 'time_night' }, // Special logic for cross-midnight
+       { id: 'night_owl', name: 'Night Owl', desc: '10 Late night sessions (10PM-4AM).', icon: 'bedtime', target: 10, type: 'time_night' }, 
        { id: 'weekend_warrior', name: 'Weekend Warrior', desc: '10 sessions on Weekends.', icon: 'weekend', target: 10, type: 'weekend' },
        
        // ⏳ Duration
@@ -400,9 +409,6 @@ export const useLogStore = defineStore('logs', () => {
     const tagCounts = tagStats.value;
     
     // Date Match Checks
-    const dateMatches: Record<string, boolean> = {}; // key: "M-D" e.g. "1-14" (Feb 14, month is 0-indexed in JS Date? Wait, useDateFormat or Date methods.)
-    // JS Date: Month is 0-11, Date is 1-31.
-    // Let's store set of "M-D" strings present in logs.
     const presentDates = new Set<string>();
 
     logs.value.forEach(l => {
@@ -433,7 +439,7 @@ export const useLogStore = defineStore('logs', () => {
     return badges.map(b => {
        let progress = 0;
        if (b.type === 'count') progress = total;
-       if (b.type === 'exact_count') progress = total; // Trigger only on exact match? Or >=? Commonly Achievements are >= but "The Answer" implies exact. Let's do >= for simplicity or strictly exact? Let's do >= 42 to keep it unlocked.
+       if (b.type === 'exact_count') progress = total;
        
        if (b.type === 'streak') progress = streak;
        if (b.type === 'daily_max') progress = maxDaily;
