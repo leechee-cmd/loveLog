@@ -43,6 +43,11 @@ export const useSettingsStore = defineStore('settings', () => {
     settings.value.language = lang;
   }
 
+  // Theme management
+  function setTheme(theme: 'light' | 'dark' | 'system') {
+    settings.value.theme = theme;
+  }
+
   // 标签管理
   function addTag(tag: string) {
     if (!tag) return;
@@ -94,6 +99,7 @@ export const useSettingsStore = defineStore('settings', () => {
     settings,
     isUnlocked,
     setLanguage,
+    setTheme,
     addTag,
     removeTag,
     setPin,

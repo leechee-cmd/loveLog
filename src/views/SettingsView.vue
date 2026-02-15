@@ -3,11 +3,13 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useDialog } from '../composables/useDialog';
 import PinLock from '../components/business/PinLock.vue';
 
 const logStore = useLogStore();
 const settingsStore = useSettingsStore();
 const { t } = useI18n();
+const { showConfirm, showAlert } = useDialog();
 const fileInput = ref<HTMLInputElement | null>(null);
 const newTagInput = ref('');
 const showPinSetup = ref(false);
@@ -29,19 +31,17 @@ const handleAddTag = () => {
   }
 };
 
-const handleRemoveTag = (tag: string) => {
-  if (confirm(t('settings.confirm.remove_tag', { tag }))) {
-    settingsStore.removeTag(tag);
-  }
+const handleRemoveTag = async (tag: string) => {
+  const ok = await showConfirm({ message: t('settings.confirm.remove_tag', { tag }) });
+  if (ok) settingsStore.removeTag(tag);
 };
 
 // PIN 相关
-const handleTogglePin = () => {
+const handleTogglePin = async () => {
   if (settingsStore.settings.security.pinEnabled) {
     // 关闭 PIN
-    if (confirm(t('settings.confirm.disable_pin'))) {
-      settingsStore.clearPin();
-    }
+    const ok = await showConfirm({ message: t('settings.confirm.disable_pin') });
+    if (ok) settingsStore.clearPin();
   } else {
     // 开启 PIN，显示设置界面
     showPinSetup.value = true;
@@ -81,23 +81,28 @@ const handleImportFile = async (event: Event) => {
     const text = e.target?.result as string;
     try {
       await logStore.importData(text, 'merge');
-      alert(t('settings.confirm.import_success'));
+      await showAlert({ message: t('settings.confirm.import_success') });
     } catch (err) {
-      alert(t('settings.confirm.import_fail'));
+      await showAlert({ message: t('settings.confirm.import_fail') });
     }
   };
   reader.readAsText(file);
 };
 
 const handleClear = async () => {
-  if (!confirm(t('settings.confirm.wipe_warning'))) return;
+  const ok = await showConfirm({ 
+    message: t('settings.confirm.wipe_warning'), 
+    danger: true 
+  });
+  if (!ok) return;
   await logStore.clearAllData();
 };
 
 const handleGenerateDemo = async () => {
-  if (confirm(t('settings.confirm.generate_warning'))) {
-     await logStore.generateDemoData();
-     alert(t('settings.confirm.demo_success'));
+  const ok = await showConfirm({ message: t('settings.confirm.generate_warning') });
+  if (ok) {
+    await logStore.generateDemoData();
+    await showAlert({ message: t('settings.confirm.demo_success') });
   }
 };
 </script>
@@ -140,6 +145,38 @@ const handleGenerateDemo = async () => {
                <span class="material-symbols-rounded text-neutral-400">swap_horiz</span>
             </div>
           </button>
+        </div>
+        
+        <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-1 mt-4">
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <span class="material-symbols-rounded text-primary text-xl">dark_mode</span>
+              <div class="font-medium">{{ t('settings.theme') }}</div>
+            </div>
+            <div class="flex bg-neutral-200 dark:bg-neutral-800 rounded-lg p-1">
+              <button 
+                @click="settingsStore.setTheme('light')"
+                class="p-1.5 rounded-md transition-all flex items-center justify-center"
+                :class="settingsStore.settings.theme === 'light' ? 'bg-white dark:bg-neutral-600 shadow-sm text-primary' : 'text-neutral-500'"
+              >
+                <span class="material-symbols-rounded text-lg">light_mode</span>
+              </button>
+              <button 
+                @click="settingsStore.setTheme('system')"
+                class="p-1.5 rounded-md transition-all flex items-center justify-center"
+                :class="settingsStore.settings.theme === 'system' ? 'bg-white dark:bg-neutral-600 shadow-sm text-primary' : 'text-neutral-500'"
+              >
+                <span class="material-symbols-rounded text-lg">contrast</span>
+              </button>
+              <button 
+                @click="settingsStore.setTheme('dark')"
+                class="p-1.5 rounded-md transition-all flex items-center justify-center"
+                :class="settingsStore.settings.theme === 'dark' ? 'bg-white dark:bg-neutral-600 shadow-sm text-primary' : 'text-neutral-500'"
+              >
+                <span class="material-symbols-rounded text-lg">dark_mode</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from './stores/settingsStore';
 import PinLock from './components/business/PinLock.vue';
 import ToastContainer, { type Toast } from './components/base/ToastContainer.vue';
+import AppDialog from './components/base/AppDialog.vue';
 
 const settingsStore = useSettingsStore();
 const router = useRouter();
@@ -16,6 +17,29 @@ watch(() => settingsStore.settings.language, (newLang) => {
     locale.value = newLang;
   }
 }, { immediate: true });
+
+// Theme Application Logic
+const applyTheme = () => {
+  const theme = settingsStore.settings.theme;
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (isDark) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+};
+
+// Initial apply
+onMounted(() => {
+  applyTheme();
+  // Listen for system changes if in system mode
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (settingsStore.settings.theme === 'system') applyTheme();
+  });
+});
+
+// Watch for store changes
+watch(() => settingsStore.settings.theme, applyTheme);
 
 // 动态过渡名称
 const transitionName = ref('fade-up');
@@ -54,6 +78,9 @@ onMounted(() => {
   <div class="bg-surface-light dark:bg-surface-dark h-screen overflow-hidden flex flex-col text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
     <!-- Toast Notification Container -->
     <ToastContainer ref="toastRef" />
+    
+    <!-- 全局自定义对话框 -->
+    <AppDialog />
 
     <!-- PIN 锁屏 -->
     <PinLock 

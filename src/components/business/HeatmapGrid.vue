@@ -35,12 +35,17 @@ const totalWeeks = computed(() => {
 });
 
 // 将每个日期映射为 { date, col, row }
+// 今天的日期字符串，用于判断未来日期
+const todayStr = computed(() => new Date().toISOString().slice(0, 10));
+
 const cellData = computed(() => {
   const start = currentYearStart.value;
   return days.value.map(day => {
     const col = differenceInCalendarWeeks(day, start, { weekStartsOn: 0 });
     const row = getDay(day); // 0=Sunday ... 6=Saturday
-    return { date: day, col, row };
+    const dateStr = day.toISOString().slice(0, 10);
+    const isFuture = dateStr > todayStr.value;
+    return { date: day, col, row, isFuture };
   });
 });
 
@@ -77,14 +82,16 @@ const getTooltip = (date: Date) => {
   return `${count} logs on ${date.toLocaleDateString(locale.value)}`;
 };
 
+// 热力图格子颜色
+const EMPTY_CELL = 'bg-neutral-200 dark:bg-neutral-700';
 const getIntensityClass = (level: number) => {
   switch (level) {
-    case 0: return 'bg-neutral-200 dark:bg-neutral-800';
-    case 1: return 'bg-primary/30';
-    case 2: return 'bg-primary/50';
-    case 3: return 'bg-primary/75';
-    case 4: return 'bg-primary';
-    default: return 'bg-neutral-200 dark:bg-neutral-800';
+    case 0: return EMPTY_CELL;
+    case 1: return 'bg-rose-200 dark:bg-rose-800';
+    case 2: return 'bg-rose-300 dark:bg-rose-600';
+    case 3: return 'bg-rose-400 dark:bg-rose-500';
+    case 4: return 'bg-primary dark:bg-primary';
+    default: return EMPTY_CELL;
   }
 };
 
@@ -131,8 +138,8 @@ const handleCellClick = (date: Date) => {
           v-for="cell in cellData" 
           :key="cell.date.toISOString()"
           class="rounded-sm transition-colors cursor-pointer hover:border hover:border-black/20 dark:hover:border-white/40"
-          style="aspect-ratio: 1;"
           :class="getIntensityClass(getLevel(cell.date))"
+          style="aspect-ratio: 1;"
           :title="getTooltip(cell.date)"
           :style="{
             gridRow: String(cell.row + 2),

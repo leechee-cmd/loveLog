@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* 启用基于 class 的暗黑模式切换（Tailwind v4 必须） */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Custom Base Styles for Native Feel */
 @theme {
   --color-primary: #f43f5e;
@@ -88,4 +91,20 @@ html, body {
 .mask-gradient {
   mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+/* 全局点击反馈 — 模拟原生 App 触摸回馈 */
+button, 
+[role="button"],
+a,
+.clickable {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+button:active,
+[role="button"]:active,
+a:active,
+.clickable:active {
+  transform: scale(0.97);
+  opacity: 0.85;
 }
