@@ -219,7 +219,7 @@ const formatLogTime = (timestamp: number) => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col items-center py-8 safe-top safe-bottom relative bg-surface-light dark:bg-surface-dark">
+  <div class="h-full flex flex-col items-center pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)] relative bg-surface-light dark:bg-surface-dark">
     
     <!-- Header -->
     <header class="w-full px-6 flex justify-between items-start animate-fade-in flex-none">

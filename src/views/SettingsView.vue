@@ -143,7 +143,7 @@ const handleGenerateDemo = async () => {
       @cancel="handlePinSetupCancel"
     />
 
-    <div class="h-full flex flex-col pt-10 pb-6 safe-top safe-bottom overflow-hidden">
+    <div class="h-full flex flex-col pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] overflow-hidden">
     <!-- Header -->
     <header class="px-6 mb-8 flex items-center gap-4 flex-none">
       <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">

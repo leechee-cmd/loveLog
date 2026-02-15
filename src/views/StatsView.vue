@@ -21,7 +21,7 @@ const bestStreak = computed(() => logStore.longestStreak);
 </script>
 
 <template>
-  <div class="h-full flex flex-col pt-10 pb-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark overflow-hidden">
+  <div class="h-full flex flex-col pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] bg-surface-light dark:bg-surface-dark overflow-hidden">
     <!-- Header -->
     <header class="px-6 mb-4 flex items-center justify-between animate-fade-in flex-none">
        <div class="flex items-center gap-4">
