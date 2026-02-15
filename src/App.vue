@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from 'vue-router';
 import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from './stores/settingsStore';
 import PinLock from './components/business/PinLock.vue';
 import ToastContainer, { type Toast } from './components/base/ToastContainer.vue';
 
 const settingsStore = useSettingsStore();
 const router = useRouter();
+const { locale } = useI18n();
+
+// Sync locale from store to i18n instance
+watch(() => settingsStore.settings.language, (newLang) => {
+  if (newLang) {
+    locale.value = newLang;
+  }
+}, { immediate: true });
 
 // 动态过渡名称
 const transitionName = ref('fade-up');

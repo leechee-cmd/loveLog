@@ -8,6 +8,7 @@ import i18n from '../i18n';
 export const useLogStore = defineStore('logs', () => {
   const logs = ref<LogEntry[]>([]);
   const loading = ref(false);
+  const statsYear = ref(new Date().getFullYear());
 
   // Computed
   const todayLogs = computed(() => {
@@ -322,7 +323,6 @@ export const useLogStore = defineStore('logs', () => {
      return counts;
   });
   
-  const statsYear = ref(new Date().getFullYear());
 
   const availableYears = computed(() => {
     const years = new Set(logs.value.map(l => new Date(l.timestamp).getFullYear()));

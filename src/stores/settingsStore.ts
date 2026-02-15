@@ -3,6 +3,7 @@ import { useStorage } from '@vueuse/core';
 import { ref } from 'vue';
 
 export interface AppSettings {
+  language: 'zh' | 'en';
   theme: 'system' | 'light' | 'dark';
   security: {
     pinEnabled: boolean;
@@ -25,6 +26,7 @@ function hashPin(pin: string): string {
 export const useSettingsStore = defineStore('settings', () => {
   // 持久化设置
   const settings = useStorage<AppSettings>('lovelog-settings', {
+    language: 'zh',
     theme: 'system',
     security: {
       pinEnabled: false,
@@ -35,6 +37,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
   // 应用解锁状态 (非持久化，每次启动都需重新验证)
   const isUnlocked = ref(false);
+
+  // Language management
+  function setLanguage(lang: 'zh' | 'en') {
+    settings.value.language = lang;
+  }
 
   // 标签管理
   function addTag(tag: string) {
@@ -86,6 +93,7 @@ export const useSettingsStore = defineStore('settings', () => {
   return {
     settings,
     isUnlocked,
+    setLanguage,
     addTag,
     removeTag,
     setPin,

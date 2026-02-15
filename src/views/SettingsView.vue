@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -11,6 +11,15 @@ const { t } = useI18n();
 const fileInput = ref<HTMLInputElement | null>(null);
 const newTagInput = ref('');
 const showPinSetup = ref(false);
+
+const currentLangLabel = computed(() => {
+  return settingsStore.settings.language === 'zh' ? '简体中文' : 'English';
+});
+
+const toggleLanguage = () => {
+  const newLang = settingsStore.settings.language === 'zh' ? 'en' : 'zh';
+  settingsStore.setLanguage(newLang);
+};
 
 const handleAddTag = () => {
   const tag = newTagInput.value.trim();
@@ -114,6 +123,26 @@ const handleGenerateDemo = async () => {
 
     <main class="flex-1 px-6 space-y-8 animate-fade-in overflow-y-auto no-scrollbar pb-10">
       
+      <!-- General Section -->
+      <section>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">{{ t('settings.general') }}</h2>
+        <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-1">
+          <button @click="toggleLanguage" class="w-full p-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors text-left">
+            <div class="flex items-center gap-4">
+              <span class="material-symbols-rounded text-primary text-xl">language</span>
+              <div>
+                <div class="font-medium">{{ t('settings.language') }}</div>
+                <div class="text-xs text-neutral-500">{{ t('settings.language_desc') }}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-neutral-500 font-medium">
+               <span>{{ currentLangLabel }}</span>
+               <span class="material-symbols-rounded text-neutral-400">swap_horiz</span>
+            </div>
+          </button>
+        </div>
+      </section>
+
       <!-- Security Section -->
       <section>
         <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">{{ t('settings.security') }}</h2>

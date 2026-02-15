@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { eachDayOfInterval, format, startOfYear, endOfYear, getDay } from 'date-fns';
+import { eachDayOfInterval, startOfYear, endOfYear, getDay, differenceInCalendarWeeks } from 'date-fns';
+import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../../stores/logStore';
 
 const props = defineProps<{
-  year?: Date // Defaults to current year view logic if needed, or rolling window
+  year?: Date
 }>();
 
 const logStore = useLogStore();
+const { locale } = useI18n();
 
-const currentYearStart = computed(() => startOfYear(new Date(logStore.statsYear, 0, 1)));
-const currentYearEnd = computed(() => endOfYear(new Date(logStore.statsYear, 0, 1)));
+const currentYearStart = computed(() => {
+   const y = logStore.statsYear || new Date().getFullYear();
+   return startOfYear(new Date(y, 0, 1));
+});
+
+const currentYearEnd = computed(() => {
+   const y = logStore.statsYear || new Date().getFullYear();
+   return endOfYear(new Date(y, 0, 1));
+});
 
 const days = computed(() => {
   return eachDayOfInterval({
@@ -20,18 +29,40 @@ const days = computed(() => {
   });
 });
 
-// Helper to get logic level (0-4)
+// 计算总周数（列数）
+const totalWeeks = computed(() => {
+  return differenceInCalendarWeeks(currentYearEnd.value, currentYearStart.value, { weekStartsOn: 0 }) + 1;
+});
+
+// 将每个日期映射为 { date, col, row }
+const cellData = computed(() => {
+  const start = currentYearStart.value;
+  return days.value.map(day => {
+    const col = differenceInCalendarWeeks(day, start, { weekStartsOn: 0 });
+    const row = getDay(day); // 0=Sunday ... 6=Saturday
+    return { date: day, col, row };
+  });
+});
+
+// 月份标签：计算每月第一天所在的列索引
+const months = computed(() => {
+  const start = currentYearStart.value;
+  const ms = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(start.getFullYear(), i, 1);
+    const col = differenceInCalendarWeeks(d, start, { weekStartsOn: 0 });
+    ms.push({
+      name: d.toLocaleDateString(locale.value, { month: 'short' }),
+      col: col + 1 // CSS grid-column 是 1-based
+    });
+  }
+  return ms;
+});
+
+// 辅助函数：获取活动等级 (0-4)
 const getLevel = (date: Date) => {
-  const dateStr = format(date, 'yyyy-MM-dd');
-  // Inefficient O(N) lookup for every cell? 
-  // We should probably optimize this in the store or a map, but for <365 items it's fine for MVP.
-  // Actually store has `todayLogs` which is specific. 
-  // Let's make a Map in the component or store.
-  // The store logs are an array.
-  
-  // Better: Create a Map of Date -> Count
+  const dateStr = date.toISOString().slice(0, 10);
   const count = logStore.logs.filter(l => l.dateStr === dateStr).length;
-  
   if (count === 0) return 0;
   if (count <= 1) return 1;
   if (count <= 2) return 2;
@@ -39,12 +70,12 @@ const getLevel = (date: Date) => {
   return 4;
 };
 
-// Tooltip text
+// 提示文本
 const getTooltip = (date: Date) => {
-  const dateStr = format(date, 'yyyy-MM-dd');
+  const dateStr = date.toISOString().slice(0, 10);
   const count = logStore.logs.filter(l => l.dateStr === dateStr).length;
-  return `${count} logs on ${format(date, 'MMM d, yyyy')}`;
-}
+  return `${count} logs on ${date.toLocaleDateString(locale.value)}`;
+};
 
 const getIntensityClass = (level: number) => {
   switch (level) {
@@ -61,76 +92,53 @@ const router = useRouter();
 
 const handleCellClick = (date: Date) => {
   router.push({
-    name: 'history', // Assuming route name is 'history' or logic to path '/history'
-    query: { date: format(date, 'yyyy-MM-dd') }
+    name: 'history',
+    query: { date: date.toISOString().slice(0, 10) }
   });
 };
-
-const padDays = computed(() => {
-  const startDay = getDay(currentYearStart.value); // 0 = Sunday
-  return Array(startDay).fill(null);
-});
-
-// Month Labels Logic
-const months = computed(() => {
-  const ms = [];
-  const start = currentYearStart.value;
-  // Iterate 12 months
-  for (let i = 0; i < 12; i++) {
-     const d = new Date(start.getFullYear(), i, 1);
-     // Calculate approximate week index
-     // Difference in days from start of year
-     const diffTime = Math.abs(d.getTime() - start.getTime());
-     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-     // Add padding days to get grid position
-     const startDay = getDay(start);
-     const weekIndex = Math.floor((diffDays + startDay) / 7);
-     
-     ms.push({
-        name: format(d, 'MMM'),
-        left: weekIndex // Just return the column index (week index)
-     });
-  }
-  return ms;
-});
 </script>
 
 <template>
   <div class="w-full overflow-x-auto no-scrollbar pb-4 scroll-smooth">
-    <div class="min-w-max p-1 relative pt-6">
+    <div class="min-w-max p-1">
       
-      <!-- Month Labels -->
-      <div class="flex text-[10px] text-neutral-400 font-medium absolute top-0 left-1 h-6 select-none pointer-events-none w-full">
-         <span 
-           v-for="(m, i) in months" 
-           :key="i"
-           class="absolute top-0"
-           :style="{ left: (m.left * 16) + 'px' }" 
-         >
-           {{ m.name }}
-         </span>
-      </div>
-
-      <!-- Grid with 7 rows (Sunday to Saturday) -->
+      <!-- 使用同一个 CSS Grid 来放月份标签和日期格子 -->
+      <!-- 第1行放月份标签，第2~8行放7天（周日~周六） -->
       <div 
-        class="grid grid-rows-7 gap-1"
-        style="grid-auto-flow: column;"
+        class="heatmap-grid"
+        :style="{
+          display: 'grid',
+          gridTemplateRows: `auto repeat(7, 1fr)`,
+          gridTemplateColumns: `repeat(${totalWeeks}, 1fr)`,
+          gap: '3px'
+        }"
       >
-        <!-- Padding for start of year alignment -->
-        <div 
-          v-for="i in padDays.length" 
-          :key="'pad-' + i"
-          class="w-3 h-3"
-        ></div>
+        <!-- 月份标签：放在第1行，使用 grid-column 精准定位 -->
+        <span 
+          v-for="(m, i) in months" 
+          :key="'month-' + i"
+          class="text-[10px] text-neutral-400 font-medium whitespace-nowrap select-none pointer-events-none leading-none pb-1"
+          :style="{ 
+            gridRow: '1', 
+            gridColumn: String(m.col) 
+          }"
+        >
+          {{ m.name }}
+        </span>
 
-        <!-- Render Days -->
+        <!-- 日期格子：放在第2~8行（row+2），使用 grid-column 精准定位 -->
         <div 
-          v-for="day in days" 
-          :key="day.toISOString()"
-          class="w-3 h-3 rounded-sm transition-colors cursor-pointer hover:border hover:border-black/20 dark:hover:border-white/40"
-          :class="getIntensityClass(getLevel(day))"
-          :title="getTooltip(day)"
-          @click="handleCellClick(day)"
+          v-for="cell in cellData" 
+          :key="cell.date.toISOString()"
+          class="rounded-sm transition-colors cursor-pointer hover:border hover:border-black/20 dark:hover:border-white/40"
+          style="aspect-ratio: 1;"
+          :class="getIntensityClass(getLevel(cell.date))"
+          :title="getTooltip(cell.date)"
+          :style="{
+            gridRow: String(cell.row + 2),
+            gridColumn: String(cell.col + 1)
+          }"
+          @click="handleCellClick(cell.date)"
         ></div>
       </div>
     </div>
