@@ -60,6 +60,10 @@ export const useSettingsStore = defineStore('settings', () => {
     settings.value.customTags = settings.value.customTags.filter(t => t !== tag);
   }
 
+  function resetTags() {
+    settings.value.customTags = [];
+  }
+
   // PIN 锁管理
   function setPin(pin: string) {
     if (pin.length !== 4) return false;
@@ -102,6 +106,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setTheme,
     addTag,
     removeTag,
+    resetTags,
     setPin,
     verifyPin,
     clearPin,

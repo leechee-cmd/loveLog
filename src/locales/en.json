@@ -108,6 +108,7 @@
       "import_success": "Import Successful!",
       "import_fail": "Failed to import: Invalid file format.",
       "wipe_warning": "Are you certain? This will wipe all data permanently.",
+      "wipe_success": "All data cleared successfully.",
       "generate_warning": "Generate 1 year of demo data? This will add to existing data.",
       "demo_success": "Demo data generated!"
     }

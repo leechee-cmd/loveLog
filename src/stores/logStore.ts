@@ -90,7 +90,7 @@ export const useLogStore = defineStore('logs', () => {
       id: uuidv4(),
       timestamp: targetDate.getTime(),
       dateStr: useDateFormat(targetDate, 'YYYY-MM-DD').value,
-      tags: [i18n.global.t('editor.default_tag')], // 默认标签
+      tags: ['Make Love'], // 默认标签（与语言无关）
       createdAt: new Date().getTime(),
       updatedAt: new Date().getTime(),
     };
@@ -215,7 +215,7 @@ export const useLogStore = defineStore('logs', () => {
             const time = new Date(d);
             time.setHours(8 + Math.floor(Math.random() * 14), Math.floor(Math.random() * 60));
             
-            const tags = [i18n.global.t('editor.default_tag')];
+            const tags = ['Make Love'];
             if (time.getHours() < 10) tags.push(i18n.global.t('tags.morning'));
             if (Math.random() > 0.9) tags.push(i18n.global.t('tags.vacation'));
             

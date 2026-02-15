@@ -38,7 +38,7 @@
     "note": "备注",
     "note_placeholder": "添加私人备注...",
     "save": "保存记录",
-    "default_tag": "做爱"
+    "default_tag": "Make Love"
   },
   "history": {
     "title": "历史记录",
@@ -108,6 +108,7 @@
       "import_success": "导入成功！",
       "import_fail": "导入失败：无效的文件格式。",
       "wipe_warning": "您确定吗？这将永久清除所有数据。",
+      "wipe_success": "数据已成功清除。",
       "generate_warning": "生成 1 年的演示数据？这将添加到现有数据中。",
       "demo_success": "演示数据已生成！"
     }

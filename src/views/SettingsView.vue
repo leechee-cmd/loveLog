@@ -14,6 +14,14 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const newTagInput = ref('');
 const showPinSetup = ref(false);
 
+// 开发者模式：生产环境需点击"备份与恢复"标题7次解锁
+const devTapCount = ref(0);
+const showDevMode = computed(() => import.meta.env.DEV || devTapCount.value >= 7);
+const handleDevTap = () => {
+  if (import.meta.env.DEV) return; // 开发环境不需要
+  devTapCount.value++;
+};
+
 const currentLangLabel = computed(() => {
   return settingsStore.settings.language === 'zh' ? '简体中文' : 'English';
 });
@@ -96,13 +104,31 @@ const handleClear = async () => {
   });
   if (!ok) return;
   await logStore.clearAllData();
+  settingsStore.resetTags();
+  
+  // Show Toast instead of Dialog
+  window.dispatchEvent(new CustomEvent('show-toast', {
+    detail: {
+      message: t('settings.confirm.wipe_success'),
+      type: 'success',
+      icon: 'delete_forever'
+    }
+  }));
 };
 
 const handleGenerateDemo = async () => {
   const ok = await showConfirm({ message: t('settings.confirm.generate_warning') });
   if (ok) {
     await logStore.generateDemoData();
-    await showAlert({ message: t('settings.confirm.demo_success') });
+
+    
+    window.dispatchEvent(new CustomEvent('show-toast', {
+      detail: {
+        message: t('settings.confirm.demo_success'),
+        type: 'success',
+        icon: 'science'
+      }
+    }));
   }
 };
 </script>
@@ -211,11 +237,15 @@ const handleGenerateDemo = async () => {
         <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-4 space-y-4">
            <!-- Tag List -->
            <div class="flex flex-wrap gap-2">
-              <div v-if="settingsStore.settings.customTags.length === 0" class="text-neutral-400 text-sm py-2">
-                 No custom tags added.
+              <!-- Default Tag (Not removable) -->
+              <div class="pl-3 pr-3 py-1.5 rounded-full text-sm font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 shadow-sm border border-transparent dark:border-neutral-700 flex items-center gap-1.5 select-none opacity-80">
+                 <span class="leading-none pb-0.5">Make Love</span>
+                 <span class="material-symbols-rounded text-[10px] font-bold opacity-50">lock</span>
               </div>
+
+              <!-- Custom Tags -->
               <template v-for="tag in settingsStore.settings.customTags" :key="tag">
-                 <div class="pl-3 pr-2 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 shadow-sm border border-transparent flex items-center gap-1.5">
+                 <div class="pl-3 pr-2 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 shadow-sm border border-transparent dark:border-neutral-700 flex items-center gap-1.5">
                     <span class="leading-none pb-0.5">{{ tag }}</span>
                     <button @click="handleRemoveTag(tag)" class="rounded-full w-4 h-4 flex items-center justify-center bg-black/5 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors">
                        <span class="material-symbols-rounded text-[10px] font-bold">close</span>
@@ -235,7 +265,7 @@ const handleGenerateDemo = async () => {
               />
               <button 
                 @click="handleAddTag"
-                class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+                class="bg-primary text-white px-5 py-3 rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors shadow-sm active:scale-95 transition-transform"
               >
                 {{ t('settings.add') }}
               </button>
@@ -245,7 +275,7 @@ const handleGenerateDemo = async () => {
 
       <!-- Backup Section -->
       <section>
-        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">{{ t('settings.backup') }}</h2>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4 select-none" @click="handleDevTap">{{ t('settings.backup') }}</h2>
         <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-1 space-y-1">
           <button @click="handleExport" class="w-full p-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors text-left group">
             <div class="flex items-center gap-4">
@@ -280,8 +310,8 @@ const handleGenerateDemo = async () => {
         </div>
       </section>
 
-      <!-- Developer Zone -->
-      <section>
+      <!-- Developer Zone（开发环境直接显示，生产环境点击7次解锁） -->
+      <section v-if="showDevMode">
          <h2 class="text-sm font-medium text-primary uppercase tracking-widest mb-4">{{ t('settings.developer') }}</h2>
          <div class="bg-primary/5 rounded-2xl p-1">
             <button @click="handleGenerateDemo" class="w-full p-4 flex items-center gap-4 hover:bg-primary/10 rounded-xl transition-colors text-left text-primary">
@@ -296,12 +326,12 @@ const handleGenerateDemo = async () => {
 
       <!-- Danger Zone -->
       <section>
-         <h2 class="text-sm font-medium text-red-500 uppercase tracking-widest mb-4">Danger Zone</h2>
+         <h2 class="text-sm font-medium text-red-500 uppercase tracking-widest mb-4">{{ t('settings.danger_zone') }}</h2>
          <div class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-1">
             <button @click="handleClear" class="w-full p-4 flex items-center justify-between hover:bg-red-100 dark:hover:bg-red-900/20 rounded-xl transition-colors text-left text-red-600 dark:text-red-400">
               <div class="flex items-center gap-4">
                 <span class="material-symbols-rounded text-xl">delete_forever</span>
-                <span class="font-medium">Wipe All Data</span>
+                <span class="font-medium">{{ t('settings.wipe_data') }}</span>
               </div>
             </button>
          </div>

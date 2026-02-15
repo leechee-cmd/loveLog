@@ -21,7 +21,7 @@ const startTime = ref('');
 const note = ref('');
 
 // Tags
-const defaultTags = [t('editor.default_tag')];
+const defaultTags = ['Make Love'];
 const availableTags = computed(() => {
    // Merge default tags with user custom tags
    return [...defaultTags, ...settingsStore.settings.customTags];
@@ -44,7 +44,7 @@ const initForm = () => {
             if (!defaultTags.includes(t)) settingsStore.addTag(t);
          });
     } else {
-        selectedTags.value = [t('editor.default_tag')];
+        selectedTags.value = ['Make Love'];
     }
     
     note.value = props.initialData?.note || '';
