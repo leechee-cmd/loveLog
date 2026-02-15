@@ -1,11 +1,20 @@
 {
   "home": {
     "total_love": "累计爱意",
-    "tap_record": "点击记录",
+    "tap_record": "轻触记录",
     "hold_details": "长按详情",
     "recent": "近期记录",
     "view_all": "查看全部",
-    "no_records": "今天还没有记录哦。",
+    "no_records": "还没有记录哦，轻触开始~",
+    "since_last": "距上次",
+    "days": "天",
+    "hours": "小时",
+    "this_month": "本月",
+    "times": "次",
+    "streak": "连胜",
+    "total": "总计",
+    "last_time": "最近一次",
+    "min": "分钟",
     "greeting": {
       "on_fire": "干劲十足",
       "keep_it_up": "继续保持",

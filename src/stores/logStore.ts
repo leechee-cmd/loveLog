@@ -18,6 +18,23 @@ export const useLogStore = defineStore('logs', () => {
 
   const totalCount = computed(() => logs.value.length);
 
+  // 最近一条记录
+  const lastLog = computed(() => {
+    if (logs.value.length === 0) return null;
+    return logs.value[0]; // logs 已按 timestamp desc 排序
+  });
+
+  // 本月记录次数
+  const monthlyCount = computed(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    return logs.value.filter(l => {
+      const d = new Date(l.timestamp);
+      return d.getFullYear() === y && d.getMonth() === m;
+    }).length;
+  });
+
   // Actions
   async function loadLogs() {
     loading.value = true;
@@ -476,6 +493,8 @@ export const useLogStore = defineStore('logs', () => {
     loading,
     todayLogs,
     totalCount,
+    lastLog,
+    monthlyCount,
     uniqueDates,
     currentStreak,
     longestStreak,
@@ -483,7 +502,7 @@ export const useLogStore = defineStore('logs', () => {
     monthlyStats,
     statsYear,
     availableYears,
-    achievements, // Export achievements
+    achievements,
     loadLogs,
     addQuickLog,
     removeLog,
