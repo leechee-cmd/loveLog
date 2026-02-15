@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../stores/logStore';
 import BaseBtn from '../components/base/BaseBtn.vue';
 import LogEditor from '../components/business/LogEditor.vue';
 import { type LogEntry } from '../services/db';
 
+const { t, locale } = useI18n();
 const logStore = useLogStore();
 const showEditor = ref(false);
 const editingLog = ref<Partial<LogEntry> | undefined>(undefined);
@@ -16,18 +18,18 @@ const greeting = computed(() => {
   const total = logStore.totalCount;
   
   // 根据连胜和总数给出特别提示
-  if (streak >= 7) return 'On Fire';
-  if (streak >= 3) return 'Keep It Up';
-  if (total === 0) return 'Start Your Story';
+  if (streak >= 7) return t('home.greeting.on_fire');
+  if (streak >= 3) return t('home.greeting.keep_it_up');
+  if (total === 0) return t('home.greeting.start');
   
   // 基于时间的浪漫提示
-  if (hour < 6) return 'Late Night Vibes';
-  if (hour < 9) return 'Rise and Shine';
-  if (hour < 12) return 'Morning Glow';
-  if (hour < 14) return 'Midday Love';
-  if (hour < 18) return 'Afternoon Bliss';
-  if (hour < 21) return 'Golden Hour';
-  return 'Night Falls';
+  if (hour < 6) return t('home.greeting.late_night');
+  if (hour < 9) return t('home.greeting.morning');
+  if (hour < 12) return t('home.greeting.morning_glow');
+  if (hour < 14) return t('home.greeting.midday');
+  if (hour < 18) return t('home.greeting.afternoon');
+  if (hour < 21) return t('home.greeting.golden');
+  return t('home.greeting.night');
 });
 
 onMounted(() => {
@@ -143,7 +145,7 @@ watch(showEditor, (val) => {
         <h1 class="text-2xl font-light text-neutral-400 whitespace-nowrap">{{ greeting }}</h1>
         <div class="flex items-baseline gap-2 mt-2">
           <span class="text-5xl font-bold text-primary">{{ logStore.totalCount }}</span>
-          <span class="text-sm font-medium text-neutral-500">Total Love</span>
+          <span class="text-sm font-medium text-neutral-500">{{ t('home.total_love') }}</span>
         </div>
       </div>
       <div class="flex items-center gap-1 -mr-2">
@@ -206,10 +208,10 @@ watch(showEditor, (val) => {
       <!-- Hint Text -->
       <div class="mt-10 text-center">
         <p class="text-neutral-400 font-light tracking-widest text-xs uppercase mb-1">
-          Tap to Record
+          {{ t('home.tap_record') }}
         </p>
         <p class="text-neutral-300 dark:text-neutral-600 text-[10px] tracking-wider">
-          Hold for details
+          {{ t('home.hold_details') }}
         </p>
       </div>
     </main>
@@ -218,8 +220,8 @@ watch(showEditor, (val) => {
     <footer class="w-full px-6 flex flex-col flex-none h-[35vh] border-t border-neutral-100 dark:border-neutral-800 pt-4 pb-6">
       <!-- Fixed Header -->
       <div class="flex justify-between items-center py-2 flex-none">
-        <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider">Recent</h3>
-        <RouterLink to="/history" class="text-primary text-sm font-medium hover:text-primary-dark transition-colors">View All</RouterLink>
+        <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider">{{ t('home.recent') }}</h3>
+        <RouterLink to="/history" class="text-primary text-sm font-medium hover:text-primary-dark transition-colors">{{ t('home.view_all') }}</RouterLink>
       </div>
       
       <!-- Scrollable List -->
@@ -238,7 +240,7 @@ watch(showEditor, (val) => {
             </div>
             <div class="min-w-0">
               <div class="font-medium flex items-center gap-2">
-                {{ new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}
+                {{ new Date(log.timestamp).toLocaleTimeString(locale, {hour: '2-digit', minute:'2-digit'}) }}
                 <span v-if="log.durationMinutes" class="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md whitespace-nowrap">{{ log.durationMinutes }}m</span>
               </div>
               <div class="text-xs text-neutral-500 mt-0.5 flex gap-1 overflow-hidden" v-if="log.tags && log.tags.length">
@@ -255,7 +257,7 @@ watch(showEditor, (val) => {
         </div>
         
         <div v-if="logStore.todayLogs.length === 0" class="text-center py-8 text-neutral-400 text-sm italic">
-          No records today yet.
+          {{ t('home.no_records') }}
         </div>
         
         <!-- Bottom padding for scroll -->

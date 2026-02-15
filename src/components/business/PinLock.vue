@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../stores/settingsStore';
 
 const props = defineProps<{
@@ -12,6 +13,7 @@ const emit = defineEmits<{
 }>();
 
 const settingsStore = useSettingsStore();
+const { t } = useI18n();
 
 const pin = ref('');
 const confirmPin = ref('');
@@ -20,17 +22,17 @@ const step = ref<'enter' | 'confirm'>('enter');
 
 // 根据模式显示不同标题
 const title = computed(() => {
-  if (props.mode === 'unlock') return 'Enter PIN';
+  if (props.mode === 'unlock') return t('pin_lock.enter_title');
   if (props.mode === 'setup') {
-    return step.value === 'enter' ? 'Create PIN' : 'Confirm PIN';
+    return step.value === 'enter' ? t('pin_lock.create_title') : t('pin_lock.confirm_title');
   }
-  return 'Enter PIN';
+  return t('pin_lock.enter_title');
 });
 
 const subtitle = computed(() => {
-  if (props.mode === 'unlock') return 'Enter your 4-digit PIN to unlock';
+  if (props.mode === 'unlock') return t('pin_lock.enter_subtitle');
   if (props.mode === 'setup') {
-    return step.value === 'enter' ? 'Create a 4-digit PIN' : 'Enter the same PIN again';
+    return step.value === 'enter' ? t('pin_lock.create_subtitle') : t('pin_lock.confirm_subtitle');
   }
   return '';
 });
@@ -76,7 +78,7 @@ watch(() => pin.value.length, (len) => {
       if (settingsStore.verifyPin(pin.value)) {
         emit('success');
       } else {
-        error.value = 'Incorrect PIN';
+        error.value = t('pin_lock.error_incorrect');
         pin.value = '';
         // 触发震动反馈
         if (navigator.vibrate) navigator.vibrate(200);
@@ -95,7 +97,7 @@ watch(() => confirmPin.value.length, (len) => {
       settingsStore.setPin(pin.value);
       emit('success');
     } else {
-      error.value = 'PINs do not match';
+      error.value = t('pin_lock.error_mismatch');
       confirmPin.value = '';
       if (navigator.vibrate) navigator.vibrate(200);
     }
@@ -150,7 +152,7 @@ watch(() => confirmPin.value.length, (len) => {
       @click="emit('cancel')"
       class="mt-8 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 text-sm font-medium"
     >
-      Cancel
+      {{ t('pin_lock.cancel') }}
     </button>
   </div>
 </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDateFormat } from '@vueuse/core';
 import { useRoute } from 'vue-router';
 import { useLogStore } from '../stores/logStore';
@@ -9,6 +10,7 @@ import { type LogEntry } from '../services/db';
 
 const logStore = useLogStore();
 const route = useRoute();
+const { t, locale } = useI18n();
 const selectedDate = ref(new Date());
 
 onMounted(() => {
@@ -89,7 +91,7 @@ watch(showEditor, (val) => {
       <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
         <span class="material-symbols-rounded text-2xl">arrow_back</span>
       </RouterLink>
-      <h1 class="text-2xl font-bold">History</h1>
+      <h1 class="text-2xl font-bold">{{ t('history.title') }}</h1>
     </header>
 
     <main class="flex-1 px-6 space-y-6 overflow-y-auto no-scrollbar animate-slide-up pb-10">
@@ -104,7 +106,7 @@ watch(showEditor, (val) => {
           <h2 class="font-bold text-lg">
              {{ useDateFormat(selectedDate, 'MMMM D, YYYY').value }}
           </h2>
-          <span class="text-neutral-500 text-sm">{{ selectedLogs.length }} Records</span>
+          <span class="text-neutral-500 text-sm">{{ selectedLogs.length }} {{ t('history.records') }}</span>
         </div>
         
         <!-- Add Button for this day -->
@@ -113,7 +115,7 @@ watch(showEditor, (val) => {
           class="w-full py-3 rounded-xl bg-primary/10 text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors mb-4 active:scale-95"
         >
           <span class="material-symbols-rounded">add_circle</span>
-          Add Record for this Day
+          {{ t('history.add_record') }}
         </button>
 
         <!-- List -->
@@ -132,7 +134,7 @@ watch(showEditor, (val) => {
               </div>
               <div>
                 <div class="font-medium flex items-center gap-2">
-                  {{ new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}
+                  {{ new Date(log.timestamp).toLocaleTimeString(locale, {hour: '2-digit', minute:'2-digit'}) }}
                   <span v-if="log.durationMinutes" class="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">{{ log.durationMinutes }}m</span>
                 </div>
                 <div class="text-xs text-neutral-500 mt-0.5 flex gap-1 overflow-hidden" v-if="log.tags && log.tags.length">
@@ -149,7 +151,7 @@ watch(showEditor, (val) => {
           </div>
           
           <div v-if="selectedLogs.length === 0" class="text-center py-8 text-neutral-400 italic">
-            No records for this date.
+            {{ t('history.no_records') }}
           </div>
         </div>
       </section>

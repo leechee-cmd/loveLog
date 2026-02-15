@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { dbService, type LogEntry } from '../services/db';
 import { v4 as uuidv4 } from 'uuid';
 import { useNow, useDateFormat } from '@vueuse/core';
+import i18n from '../i18n';
 
 export const useLogStore = defineStore('logs', () => {
   const logs = ref<LogEntry[]>([]);
@@ -71,7 +72,7 @@ export const useLogStore = defineStore('logs', () => {
       id: uuidv4(),
       timestamp: targetDate.getTime(),
       dateStr: useDateFormat(targetDate, 'YYYY-MM-DD').value,
-      tags: ['Make Love'], // Default tag
+      tags: [i18n.global.t('default_tag')], // Default tag
       createdAt: new Date().getTime(),
       updatedAt: new Date().getTime(),
     };
@@ -93,8 +94,8 @@ export const useLogStore = defineStore('logs', () => {
              // 🎯 Achievement Unlocked!
              const event = new CustomEvent('show-toast', {
                 detail: {
-                    title: 'Achievement Unlocked!',
-                    message: b.name,
+                    title: i18n.global.t('achievements.unlocked_title'),
+                    message: i18n.global.t(b.name),
                     icon: b.icon,
                     type: 'achievement'
                 }
@@ -196,9 +197,9 @@ export const useLogStore = defineStore('logs', () => {
             const time = new Date(d);
             time.setHours(8 + Math.floor(Math.random() * 14), Math.floor(Math.random() * 60));
             
-            const tags = ['Make Love'];
-            if (time.getHours() < 10) tags.push('Morning');
-            if (Math.random() > 0.9) tags.push('Vacation');
+            const tags = [i18n.global.t('default_tag')];
+            if (time.getHours() < 10) tags.push(i18n.global.t('tags.morning'));
+            if (Math.random() > 0.9) tags.push(i18n.global.t('tags.vacation'));
             
             generated.push({
                id: uuidv4(),
@@ -225,8 +226,8 @@ export const useLogStore = defineStore('logs', () => {
       if (unlockCount > 0) {
           const event = new CustomEvent('show-toast', {
             detail: {
-                title: 'Demo Data Generated',
-                message: `Unlocked ${unlockCount} achievements!`,
+                title: i18n.global.t('achievements.demo_title'),
+                message: i18n.global.t('achievements.demo_message', { count: unlockCount }),
                 icon: 'auto_awesome',
                 type: 'achievement'
             }
@@ -356,39 +357,39 @@ export const useLogStore = defineStore('logs', () => {
     // Define Badges Config
     const badges: BaseBadge[] = [
        // 🏆 Milestones (Total Count)
-       { id: 'first_step', name: 'First Step', desc: 'Recorded your first moment.', icon: 'footprint', target: 1, type: 'count' },
-       { id: 'getting_started', name: 'Getting Started', desc: 'Recorded 10 times.', icon: 'filter_1', target: 10, type: 'count' },
-       { id: 'enthusiast', name: 'Enthusiast', desc: 'Recorded 50 times.', icon: 'favorite', target: 50, type: 'count' },
-       { id: 'centurion', name: 'Centurion', desc: 'Recorded 100 times.', icon: 'military_tech', target: 100, type: 'count' },
-       { id: 'legend', name: 'Legend', desc: 'Recorded 500 times.', icon: 'diamond', target: 500, type: 'count' },
+       { id: 'first_step', name: 'achievements.first_step.name', desc: 'achievements.first_step.desc', icon: 'footprint', target: 1, type: 'count' },
+       { id: 'getting_started', name: 'achievements.getting_started.name', desc: 'achievements.getting_started.desc', icon: 'filter_1', target: 10, type: 'count' },
+       { id: 'enthusiast', name: 'achievements.enthusiast.name', desc: 'achievements.enthusiast.desc', icon: 'favorite', target: 50, type: 'count' },
+       { id: 'centurion', name: 'achievements.centurion.name', desc: 'achievements.centurion.desc', icon: 'military_tech', target: 100, type: 'count' },
+       { id: 'legend', name: 'achievements.legend.name', desc: 'achievements.legend.desc', icon: 'diamond', target: 500, type: 'count' },
 
        // 🔥 Streaks (Consistency)
-       { id: 'warming_up', name: 'Warming Up', desc: '3-day streak.', icon: 'local_fire_department', target: 3, type: 'streak' },
-       { id: 'on_fire', name: 'On Fire', desc: '7-day streak.', icon: 'whatshot', target: 7, type: 'streak' },
-       { id: 'unstoppable', name: 'Unstoppable', desc: '14-day streak.', icon: 'bolt', target: 14, type: 'streak' },
-       { id: 'month_master', name: 'Month Master', desc: '30-day streak.', icon: 'calendar_month', target: 30, type: 'streak' },
+       { id: 'warming_up', name: 'achievements.warming_up.name', desc: 'achievements.warming_up.desc', icon: 'local_fire_department', target: 3, type: 'streak' },
+       { id: 'on_fire', name: 'achievements.on_fire.name', desc: 'achievements.on_fire.desc', icon: 'whatshot', target: 7, type: 'streak' },
+       { id: 'unstoppable', name: 'achievements.unstoppable.name', desc: 'achievements.unstoppable.desc', icon: 'bolt', target: 14, type: 'streak' },
+       { id: 'month_master', name: 'achievements.month_master.name', desc: 'achievements.month_master.desc', icon: 'calendar_month', target: 30, type: 'streak' },
 
        // ⚡ Intensity (Daily Max)
-       { id: 'double_trouble', name: 'Double Trouble', desc: '2 times in one day.', icon: 'looks_two', target: 2, type: 'daily_max' },
-       { id: 'hat_trick', name: 'Hat Trick', desc: '3 times in one day.', icon: 'looks_3', target: 3, type: 'daily_max' },
-       { id: 'insatiable', name: 'Insatiable', desc: '5 times in one day.', icon: 'all_inclusive', target: 5, type: 'daily_max' },
+       { id: 'double_trouble', name: 'achievements.double_trouble.name', desc: 'achievements.double_trouble.desc', icon: 'looks_two', target: 2, type: 'daily_max' },
+       { id: 'hat_trick', name: 'achievements.hat_trick.name', desc: 'achievements.hat_trick.desc', icon: 'looks_3', target: 3, type: 'daily_max' },
+       { id: 'insatiable', name: 'achievements.insatiable.name', desc: 'achievements.insatiable.desc', icon: 'all_inclusive', target: 5, type: 'daily_max' },
 
        // 🕰️ Timing & Context
-       { id: 'early_bird', name: 'Early Bird', desc: '5 Morning sessions (5AM-9AM).', icon: 'wb_twilight', target: 5, type: 'time', start: 5, end: 9 },
-       { id: 'night_owl', name: 'Night Owl', desc: '10 Late night sessions (10PM-4AM).', icon: 'bedtime', target: 10, type: 'time_night' }, 
-       { id: 'weekend_warrior', name: 'Weekend Warrior', desc: '10 sessions on Weekends.', icon: 'weekend', target: 10, type: 'weekend' },
+       { id: 'early_bird', name: 'achievements.early_bird.name', desc: 'achievements.early_bird.desc', icon: 'wb_twilight', target: 5, type: 'time', start: 5, end: 9 },
+       { id: 'night_owl', name: 'achievements.night_owl.name', desc: 'achievements.night_owl.desc', icon: 'bedtime', target: 10, type: 'time_night' }, 
+       { id: 'weekend_warrior', name: 'achievements.weekend_warrior.name', desc: 'achievements.weekend_warrior.desc', icon: 'weekend', target: 10, type: 'weekend' },
        
        // ⏳ Duration
-       { id: 'quickie', name: 'Quickie', desc: '10 Quick sessions (<15m).', icon: 'timer', target: 10, type: 'duration_under', minutes: 15 },
-       { id: 'marathon', name: 'Marathon', desc: '5 Long sessions (>45m).', icon: 'timelapse', target: 5, type: 'duration_over', minutes: 45 },
+       { id: 'quickie', name: 'achievements.quickie.name', desc: 'achievements.quickie.desc', icon: 'timer', target: 10, type: 'duration_under', minutes: 15 },
+       { id: 'marathon', name: 'achievements.marathon.name', desc: 'achievements.marathon.desc', icon: 'timelapse', target: 5, type: 'duration_over', minutes: 45 },
 
        // 🌍 Tags
-       { id: 'adventurer', name: 'Adventurer', desc: 'Logged on Vacation.', icon: 'flight', target: 1, type: 'tag', tag: 'Vacation' },
+       { id: 'adventurer', name: 'achievements.adventurer.name', desc: 'achievements.adventurer.desc', icon: 'flight', target: 1, type: 'tag', tag: i18n.global.t('tags.vacation') },
 
        // 🕵️ Hidden / Special (Secret)
-       { id: 'cupid', name: "Cupid's Arrow", desc: 'Logged on Valentine\'s Day (Feb 14).', icon: 'favorite', target: 1, type: 'date_match', month: 1, day: 14, secret: true },
-       { id: 'new_year', name: 'New Year Spark', desc: 'Logged on Jan 1st.', icon: 'celebration', target: 1, type: 'date_match', month: 0, day: 1, secret: true },
-       { id: 'the_answer', name: 'The Answer', desc: 'Recorded exactly 42 times.', icon: 'psychology', target: 42, type: 'exact_count', secret: true },
+       { id: 'cupid', name: 'achievements.cupid.name', desc: 'achievements.cupid.desc', icon: 'favorite', target: 1, type: 'date_match', month: 1, day: 14, secret: true },
+       { id: 'new_year', name: 'achievements.new_year.name', desc: 'achievements.new_year.desc', icon: 'celebration', target: 1, type: 'date_match', month: 0, day: 1, secret: true },
+       { id: 'the_answer', name: 'achievements.the_answer.name', desc: 'achievements.the_answer.desc', icon: 'psychology', target: 42, type: 'exact_count', secret: true },
     ];
     
     // Pre-calculate Statistics

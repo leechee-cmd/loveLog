@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../../stores/logStore';
 import {
   Chart as ChartJS,
@@ -28,6 +29,7 @@ ChartJS.register(
 );
 
 const logStore = useLogStore();
+const { t, locale } = useI18n();
 
 const props = defineProps<{
   type: 'trend' | 'tags'
@@ -42,7 +44,7 @@ const trendData = computed(() => {
      const y = parseInt(parts[0]!);
      const m = parseInt(parts[1]!);
      const date = new Date(y, m-1);
-     return date.toLocaleDateString('en-US', { month: 'short' });
+     return date.toLocaleDateString(locale.value, { month: 'short' });
   });
   const data = Object.values(stats);
 
@@ -50,7 +52,7 @@ const trendData = computed(() => {
     labels,
     datasets: [
       {
-        label: 'Frequency',
+        label: t('stats.frequency'),
         backgroundColor: (ctx: any) => {
           const canvas = ctx.chart.ctx;
           const gradient = canvas.createLinearGradient(0, 0, 0, 400);

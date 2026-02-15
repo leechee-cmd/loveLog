@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import PinLock from '../components/business/PinLock.vue';
 
 const logStore = useLogStore();
 const settingsStore = useSettingsStore();
+const { t } = useI18n();
 const fileInput = ref<HTMLInputElement | null>(null);
 const newTagInput = ref('');
 const showPinSetup = ref(false);
@@ -19,7 +21,7 @@ const handleAddTag = () => {
 };
 
 const handleRemoveTag = (tag: string) => {
-  if (confirm(`Remove tag "${tag}"?`)) {
+  if (confirm(t('settings.confirm.remove_tag', { tag }))) {
     settingsStore.removeTag(tag);
   }
 };
@@ -28,7 +30,7 @@ const handleRemoveTag = (tag: string) => {
 const handleTogglePin = () => {
   if (settingsStore.settings.security.pinEnabled) {
     // 关闭 PIN
-    if (confirm('Disable PIN lock?')) {
+    if (confirm(t('settings.confirm.disable_pin'))) {
       settingsStore.clearPin();
     }
   } else {
@@ -70,23 +72,23 @@ const handleImportFile = async (event: Event) => {
     const text = e.target?.result as string;
     try {
       await logStore.importData(text, 'merge');
-      alert('Import Successful!');
+      alert(t('settings.confirm.import_success'));
     } catch (err) {
-      alert('Failed to import: Invalid file format.');
+      alert(t('settings.confirm.import_fail'));
     }
   };
   reader.readAsText(file);
 };
 
 const handleClear = async () => {
-  if (!confirm('Are you certain? This will wipe all data permanently.')) return;
+  if (!confirm(t('settings.confirm.wipe_warning'))) return;
   await logStore.clearAllData();
 };
 
 const handleGenerateDemo = async () => {
-  if (confirm('Generate 1 year of demo data? This will add to existing data.')) {
+  if (confirm(t('settings.confirm.generate_warning'))) {
      await logStore.generateDemoData();
-     alert('Demo data generated!');
+     alert(t('settings.confirm.demo_success'));
   }
 };
 </script>
@@ -107,21 +109,21 @@ const handleGenerateDemo = async () => {
       <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
         <span class="material-symbols-rounded text-2xl">arrow_back</span>
       </RouterLink>
-      <h1 class="text-2xl font-bold">Settings</h1>
+      <h1 class="text-2xl font-bold">{{ t('settings.title') }}</h1>
     </header>
 
     <main class="flex-1 px-6 space-y-8 animate-fade-in overflow-y-auto no-scrollbar pb-10">
       
       <!-- Security Section -->
       <section>
-        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Security</h2>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">{{ t('settings.security') }}</h2>
         <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-1">
           <button @click="handleTogglePin" class="w-full p-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors text-left">
             <div class="flex items-center gap-4">
               <span class="material-symbols-rounded text-primary text-xl" style="font-variation-settings: 'FILL' 1;">lock</span>
               <div>
-                <div class="font-medium">PIN Lock</div>
-                <div class="text-xs text-neutral-500">{{ settingsStore.settings.security.pinEnabled ? 'Enabled' : 'Protect app with 4-digit PIN' }}</div>
+                <div class="font-medium">{{ t('settings.pin_lock') }}</div>
+                <div class="text-xs text-neutral-500">{{ settingsStore.settings.security.pinEnabled ? t('settings.pin_enabled') : t('settings.pin_desc') }}</div>
               </div>
             </div>
             <div 
@@ -139,7 +141,7 @@ const handleGenerateDemo = async () => {
 
       <!-- Custom Tags Section -->
       <section>
-        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Custom Tags</h2>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">{{ t('settings.custom_tags') }}</h2>
         <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-4 space-y-4">
            <!-- Tag List -->
            <div class="flex flex-wrap gap-2">
@@ -162,14 +164,14 @@ const handleGenerateDemo = async () => {
                 v-model="newTagInput"
                 @keyup.enter="handleAddTag"
                 type="text" 
-                placeholder="Add new tag..." 
+                :placeholder="t('settings.add_tag_placeholder')" 
                 class="flex-1 bg-white dark:bg-neutral-800 rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-neutral-400"
               />
               <button 
                 @click="handleAddTag"
                 class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
               >
-                Add
+                {{ t('settings.add') }}
               </button>
            </div>
         </div>
@@ -177,14 +179,14 @@ const handleGenerateDemo = async () => {
 
       <!-- Backup Section -->
       <section>
-        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">Backup & Restore</h2>
+        <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-widest mb-4">{{ t('settings.backup') }}</h2>
         <div class="bg-surface-variant dark:bg-surface-variant-dark rounded-2xl p-1 space-y-1">
           <button @click="handleExport" class="w-full p-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors text-left group">
             <div class="flex items-center gap-4">
               <span class="material-symbols-rounded text-primary text-xl">download</span>
               <div>
-                <div class="font-medium">Export Data</div>
-                <div class="text-xs text-neutral-500">Save detailed JSON backup</div>
+                <div class="font-medium">{{ t('settings.export') }}</div>
+                <div class="text-xs text-neutral-500">{{ t('settings.export_desc') }}</div>
               </div>
             </div>
             <span class="material-symbols-rounded text-neutral-400">chevron_right</span>
@@ -194,8 +196,8 @@ const handleGenerateDemo = async () => {
             <div class="flex items-center gap-4">
                <span class="material-symbols-rounded text-primary text-xl">upload</span>
               <div>
-                <div class="font-medium">Import Data</div>
-                <div class="text-xs text-neutral-500">Restore from JSON file</div>
+                <div class="font-medium">{{ t('settings.import') }}</div>
+                <div class="text-xs text-neutral-500">{{ t('settings.import_desc') }}</div>
               </div>
             </div>
              <span class="material-symbols-rounded text-neutral-400">chevron_right</span>
@@ -214,13 +216,13 @@ const handleGenerateDemo = async () => {
 
       <!-- Developer Zone -->
       <section>
-         <h2 class="text-sm font-medium text-primary uppercase tracking-widest mb-4">Developer</h2>
+         <h2 class="text-sm font-medium text-primary uppercase tracking-widest mb-4">{{ t('settings.developer') }}</h2>
          <div class="bg-primary/5 rounded-2xl p-1">
             <button @click="handleGenerateDemo" class="w-full p-4 flex items-center gap-4 hover:bg-primary/10 rounded-xl transition-colors text-left text-primary">
                <span class="material-symbols-rounded text-xl">science</span>
                <div class="flex-1">
-                 <div class="font-medium">Generate Demo Data</div>
-                 <div class="text-xs opacity-70">Simulate 1 year of activity</div>
+                 <div class="font-medium">{{ t('settings.generate_demo') }}</div>
+                 <div class="text-xs opacity-70">{{ t('settings.demo_desc') }}</div>
                </div>
             </button>
          </div>

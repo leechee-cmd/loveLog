@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { type LogEntry } from '../../services/db';
 import { useSettingsStore } from '../../stores/settingsStore';
 
@@ -11,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'save']);
 
 // Stores
+const { t } = useI18n();
 const settingsStore = useSettingsStore();
 
 const duration = ref(0);
@@ -19,7 +21,7 @@ const startTime = ref('');
 const note = ref('');
 
 // Tags
-const defaultTags = ['Make Love'];
+const defaultTags = [t('editor.default_tag')];
 const availableTags = computed(() => {
    // Merge default tags with user custom tags
    return [...defaultTags, ...settingsStore.settings.customTags];
@@ -42,7 +44,7 @@ const initForm = () => {
             if (!defaultTags.includes(t)) settingsStore.addTag(t);
          });
     } else {
-        selectedTags.value = ['Make Love'];
+        selectedTags.value = [t('editor.default_tag')];
     }
     
     note.value = props.initialData?.note || '';
@@ -94,7 +96,7 @@ const close = () => {
     <!-- Sheet -->
     <div class="bg-surface-light dark:bg-surface-dark w-full max-w-md rounded-3xl p-6 shadow-2xl relative z-10 animate-slide-up">
       <header class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-bold">Details</h2>
+        <h2 class="text-xl font-bold">{{ t('editor.title') }}</h2>
         <button @click="close" class="p-2 -mr-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
           <span class="material-symbols-rounded">close</span>
         </button>
@@ -104,7 +106,7 @@ const close = () => {
         <!-- Duration Slider -->
         <div class="space-y-2">
            <div class="flex justify-between">
-             <label class="text-sm font-medium text-neutral-500 uppercase tracking-widest">Duration</label>
+             <label class="text-sm font-medium text-neutral-500 uppercase tracking-widest">{{ t('editor.duration') }}</label>
              <span class="font-medium text-primary">{{ duration }} min</span>
            </div>
            <input 
@@ -116,14 +118,14 @@ const close = () => {
              class="w-full accent-primary h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer"
            />
            <div class="flex justify-between text-xs text-neutral-400">
-             <span>Quick</span>
-             <span>Long</span>
+             <span>{{ t('editor.quick') }}</span>
+             <span>{{ t('editor.long') }}</span>
            </div>
         </div>
 
         <!-- Start Time -->
         <div class="space-y-2">
-           <label class="text-sm font-medium text-neutral-500 uppercase tracking-widest">Started At</label>
+           <label class="text-sm font-medium text-neutral-500 uppercase tracking-widest">{{ t('editor.started_at') }}</label>
            <input 
              type="datetime-local" 
              v-model="startTime"
@@ -151,11 +153,11 @@ const close = () => {
 
         <!-- Note -->
         <div class="space-y-2">
-           <label class="text-sm font-medium text-neutral-500 uppercase tracking-widest">Note</label>
+           <label class="text-sm font-medium text-neutral-500 uppercase tracking-widest">{{ t('editor.note') }}</label>
            <textarea 
              v-model="note"
              rows="3"
-             placeholder="Add a private note..."
+             :placeholder="t('editor.note_placeholder')"
              class="w-full bg-surface-variant dark:bg-surface-variant-dark rounded-xl p-4 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400"
            ></textarea>
         </div>
@@ -165,7 +167,7 @@ const close = () => {
           @click="handleSave"
           class="w-full py-4 rounded-xl bg-primary text-white font-bold text-lg shadow-xl shadow-primary/30 active:scale-95 transition-all"
         >
-          Save Log
+          {{ t('editor.save') }}
         </button>
       </div>
     </div>

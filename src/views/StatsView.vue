@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useLogStore } from '../stores/logStore';
 import TrendChart from '../components/business/TrendChart.vue';
 import HeatmapGrid from '../components/business/HeatmapGrid.vue';
 
 const logStore = useLogStore();
+const { t } = useI18n();
 const activeTab = ref<'overview' | 'achievements'>('overview');
 
 onMounted(() => {
@@ -26,7 +28,7 @@ const bestStreak = computed(() => logStore.longestStreak);
         <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
             <span class="material-symbols-rounded text-2xl">arrow_back</span>
         </RouterLink>
-        <h1 class="text-2xl font-bold">Insights</h1>
+        <h1 class="text-2xl font-bold">{{ t('stats.title') }}</h1>
       </div>
       
       <!-- Tab Switcher -->
@@ -36,14 +38,14 @@ const bestStreak = computed(() => logStore.longestStreak);
           class="px-3 py-1 text-sm font-medium rounded-lg transition-all"
           :class="activeTab === 'overview' ? 'bg-white dark:bg-neutral-800 shadow-sm text-primary' : 'text-neutral-500 hover:text-neutral-700'"
         >
-          Stats
+          {{ t('stats.tab_stats') }}
         </button>
         <button 
           @click="activeTab = 'achievements'"
           class="px-3 py-1 text-sm font-medium rounded-lg transition-all"
           :class="activeTab === 'achievements' ? 'bg-white dark:bg-neutral-800 shadow-sm text-primary' : 'text-neutral-500 hover:text-neutral-700'"
         >
-          Badges
+          {{ t('stats.tab_badges') }}
         </button>
       </div>
     </header>
@@ -74,7 +76,7 @@ const bestStreak = computed(() => logStore.longestStreak);
                   <span class="material-symbols-rounded text-9xl">favorite</span>
               </div>
               <div class="relative z-10">
-                  <div class="text-neutral-500 text-xs font-bold uppercase tracking-wider mb-1">Total Love</div>
+                  <div class="text-neutral-500 text-xs font-bold uppercase tracking-wider mb-1">{{ t('stats.total_love') }}</div>
                   <div class="text-3xl font-bold text-primary">{{ totalLove }}</div>
               </div>
            </div>
@@ -84,12 +86,12 @@ const bestStreak = computed(() => logStore.longestStreak);
                   <span class="material-symbols-rounded text-9xl">local_fire_department</span>
               </div>
               <div class="relative z-10">
-                  <div class="text-neutral-500 text-xs font-bold uppercase tracking-wider mb-1">Current Streak</div>
+                  <div class="text-neutral-500 text-xs font-bold uppercase tracking-wider mb-1">{{ t('stats.current_streak') }}</div>
                   <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100 flex items-baseline gap-1">
-                     {{ currentStreak }} <span class="text-sm font-normal text-neutral-500">days</span>
+                     {{ currentStreak }} <span class="text-sm font-normal text-neutral-500">{{ t('stats.days') }}</span>
                   </div>
                   <div class="text-[10px] text-neutral-400 mt-1">
-                     Best: {{ bestStreak }} days
+                     {{ t('stats.best') }}: {{ bestStreak }} {{ t('stats.days') }}
                   </div>
               </div>
            </div>
@@ -98,7 +100,7 @@ const bestStreak = computed(() => logStore.longestStreak);
         <!-- Charts -->
         <section class="bg-surface-variant dark:bg-surface-variant-dark p-5 rounded-3xl">
            <div class="mb-4 flex justify-between items-center">
-             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Monthly Trend</h3>
+             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">{{ t('stats.monthly_trend') }}</h3>
            </div>
            <div class="h-[200px] w-full">
               <TrendChart type="trend" />
@@ -108,7 +110,7 @@ const bestStreak = computed(() => logStore.longestStreak);
          <!-- Tag Breakdown -->
         <section class="bg-surface-variant dark:bg-surface-variant-dark p-5 rounded-3xl">
            <div class="mb-4">
-             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Distribution</h3>
+             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">{{ t('stats.distribution') }}</h3>
            </div>
            <div class="h-[200px] w-full">
               <TrendChart type="tags" />
@@ -118,7 +120,7 @@ const bestStreak = computed(() => logStore.longestStreak);
         <!-- Yearly Review Heatmap -->
         <section class="bg-surface-variant dark:bg-surface-variant-dark p-5 rounded-3xl">
            <div class="mb-4">
-             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Yearly Review</h3>
+             <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">{{ t('stats.yearly_review') }}</h3>
            </div>
            <HeatmapGrid />
         </section>
@@ -165,12 +167,12 @@ const bestStreak = computed(() => logStore.longestStreak);
                      </span>
                  </div>
                  
-                 <h3 class="font-bold text-sm mb-1 line-clamp-1">
-                    {{ (badge.secret && !badge.unlocked) ? '???' : badge.name }}
-                 </h3>
-                 <p class="text-xs text-neutral-500 leading-tight mb-2 line-clamp-2 h-8">
-                    {{ (badge.secret && !badge.unlocked) ? 'Keep exploring to reveal.' : badge.desc }}
-                 </p>
+                  <h3 class="font-bold text-sm mb-1 line-clamp-1">
+                     {{ (badge.secret && !badge.unlocked) ? '???' : t(badge.name) }}
+                  </h3>
+                  <p class="text-xs text-neutral-500 leading-tight mb-2 line-clamp-2 h-8">
+                     {{ (badge.secret && !badge.unlocked) ? t('stats.secret_hint') : t(badge.desc) }}
+                  </p>
                  
                  <div class="mt-auto text-[10px] font-bold uppercase tracking-wider" 
                     :class="[
@@ -179,8 +181,8 @@ const bestStreak = computed(() => logStore.longestStreak);
                       !badge.unlocked ? 'text-neutral-400' : ''
                     ]"
                  >
-                    <span v-if="badge.secret && !badge.unlocked">SECRET</span>
-                    <span v-else-if="badge.unlocked">Unlocked</span>
+                    <span v-if="badge.secret && !badge.unlocked">{{ t('stats.secret') }}</span>
+                    <span v-else-if="badge.unlocked">{{ t('stats.unlocked') }}</span>
                     <span v-else>{{ badge.progress }} / {{ badge.target }}</span>
                  </div>
               </div>

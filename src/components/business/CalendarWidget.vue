@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { 
   format, 
   startOfMonth, 
@@ -22,6 +23,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'select']);
 
 const logStore = useLogStore();
+const { locale } = useI18n();
 const currentMonth = ref(props.modelValue || new Date());
 
 // Watch for external model updates (e.g. from Heatmap jump)
@@ -37,7 +39,17 @@ const days = computed(() => {
   return eachDayOfInterval({ start, end });
 });
 
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const weekDays = computed(() => {
+  // Generate week days based on locale
+  // Find a known Sunday
+  const d = new Date(2023, 0, 1); // Jan 1 2023 was Sunday
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    days.push(d.toLocaleDateString(locale.value, { weekday: 'short' }));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+});
 
 // Navigation
 const prevMonth = () => currentMonth.value = subMonths(currentMonth.value, 1);
@@ -65,7 +77,7 @@ const isSelected = (date: Date) => props.modelValue && isSameDay(date, props.mod
       <button @click="prevMonth" class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full">
         <span class="material-symbols-rounded">chevron_left</span>
       </button>
-      <h2 class="font-bold text-lg">{{ format(currentMonth, 'MMMM yyyy') }}</h2>
+      <h2 class="font-bold text-lg capitalize">{{ currentMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' }) }}</h2>
       <button @click="nextMonth" class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full" :disabled="isFuture(addMonths(currentMonth, 1))">
          <!-- Disable going too far future? Just simple logic for now -->
         <span class="material-symbols-rounded">chevron_right</span>
