@@ -85,7 +85,7 @@ watch(showEditor, (val) => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col py-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark">
+  <div class="h-full flex flex-col pt-10 pb-6 safe-top safe-bottom bg-surface-light dark:bg-surface-dark">
     <!-- Header -->
     <header class="px-6 mb-4 flex items-center gap-4 animate-fade-in">
       <RouterLink to="/" class="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
